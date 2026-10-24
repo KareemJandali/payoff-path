@@ -281,7 +281,7 @@ td.pos{color:var(--good)} td.dbt{color:var(--debt)} td.sv{color:var(--save)} td.
 .fld{display:grid;gap:5px;min-width:0}
 .fld>span{font-size:12.5px;font-weight:600;color:var(--ink-2)}
 .fld small{color:var(--ink-3);font-size:12px}
-input[type=text],input[type=number],input[type=date],input:not([type]),select,textarea{width:100%;min-width:0;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:10px 12px;font-size:16px}
+input[type=text],input[type=number],input[type=date],input[type=time],input:not([type]),select,textarea{width:100%;min-width:0;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:10px 12px;font-size:16px}
 textarea{font-family:var(--mono);font-size:16px;resize:vertical}
 input[type=date]{-webkit-appearance:none;appearance:none;min-height:46px;text-align:left;display:block}
 input[type=date]::-webkit-date-and-time-value{text-align:left}
@@ -544,6 +544,58 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
 .big2{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
 .big2 small{font-family:var(--body);font-size:15px;font-weight:500;color:var(--ink-2);margin-left:5px}
 .wlist{margin-top:10px}
+/* stay on track: mood, urge button, plans */
+.focus{border-color:color-mix(in srgb,var(--invest) 35%,var(--line))}
+.moodq{display:grid;gap:8px}
+.moodq>span,.moodset>span{font-size:14px;color:var(--ink-2)}
+.moods{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.moods button{border:1px solid var(--line);background:var(--surface-2);border-radius:14px;font-size:26px;line-height:1;padding:10px 0;min-height:52px}
+.moods button:active{transform:scale(.93)}
+.moodset{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.plans{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.plans li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;background:var(--invest-soft);border-radius:12px;padding:9px 12px;font-size:14px;line-height:1.4}
+.plans li .x{border:0;background:none;color:var(--ink-3);font-size:20px;line-height:1;padding:0 4px}
+.urgebtn{width:100%;margin-top:12px;padding:13px;font-size:16px;border-radius:14px;background:var(--invest);border-color:var(--invest);color:#fff}
+.linkbtn{border:0;background:none;padding:0;color:var(--ink-2);text-decoration:underline;text-underline-offset:2px;font-size:inherit}
+/* urge timer */
+.timer{display:grid;place-items:center;position:relative;margin:4px auto 2px;width:190px;height:190px}
+.timer svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:9}
+.timer .tr-bg{stroke:var(--surface-2)}
+.timer .tr-fg{stroke:var(--invest);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.timer>div{position:relative;text-align:center;display:grid;gap:4px;max-width:140px}
+.timer b{font-family:var(--display);font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.timer small{font-size:12px;color:var(--ink-2);line-height:1.3}
+.alts{display:flex;flex-wrap:wrap;gap:6px}
+.alts span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.reasons{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14.5px}
+/* 7-day forecast + hardest hours */
+.fcrow{padding:10px 0;border-top:1px solid var(--line);display:grid;gap:8px}
+.fcrow:first-child{border-top:0;padding-top:0}
+.fcrow>b{font-size:15px}
+.fcrow small{font-size:12.5px;color:var(--ink-2)}
+.fc7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.fc7>div{background:var(--surface-2);border-radius:10px;padding:7px 2px;text-align:center;display:grid;gap:2px;min-width:0}
+.fc7 span{font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc7 b{font-family:var(--mono);font-size:13px}
+.fc7 .mid{background:var(--warn-soft)} .fc7 .mid b{color:var(--warn)}
+.fc7 .hi{background:var(--debt-soft)} .fc7 .hi b{color:var(--debt)}
+.hrs-h{font-size:12.5px;color:var(--ink-2)}
+.hrs{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px;height:46px;align-items:end}
+.hrs i{display:block;background:var(--line);border-radius:3px 3px 1px 1px}
+.hrs i.on{background:var(--debt)}
+.hrs-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-3)}
+/* playbook, futures, chains */
+.play{display:grid;gap:6px;padding:6px 0}
+.play p{margin:0;font-size:14px;color:var(--ink)}
+.play .btn,.play .pill{justify-self:start}
+.futs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fut{background:var(--surface-2);border-radius:12px;padding:10px 12px;display:grid;gap:4px;font-size:13px;color:var(--ink-2);min-width:0}
+.fut b{color:var(--ink);font-family:var(--display);font-size:15px}
+.fut.good{background:var(--save-soft)} .fut.good .eyebrow{color:var(--good)}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin-top:6px}
+.chain span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 9px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.chain i{font-style:normal;color:var(--ink-3);font-size:12px}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
 .loading{display:grid;place-items:center;min-height:50vh;color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -669,7 +721,8 @@ function guessExpense(note){
 const sumAmt=a=>a.reduce((s,e)=>s+(+e.amount||0),0);
 // imported statement lines (imp) are history only: they are already inside the balances you enter or import
 function cashNow(S){let c=+S.cash.amount||0;const t0=S.cash.ts||0;for(const e of EXP)if(e.via==='bank'&&!e.imp&&e.ts>t0)c-=+e.amount||0;return r2(c)}
-function spentIn(a,b){let s=0;for(const e of EXP)if(e.date>=a&&e.date<=b)s+=+e.amount||0;return r2(s)}
+// fun money from rewards (reward:true) is already set aside, so it never counts against the weekly budget
+function spentIn(a,b){let s=0;for(const e of EXP)if(e.date>=a&&e.date<=b&&!e.reward)s+=+e.amount||0;return r2(s)}
 const periodDays=f=>{const q=(f.rule||{}).freq;return q==='weekly'?7:q==='biweekly'?14:q==='monthly'?30.44:7};
 const envFlow=S=>S.flows.find(f=>f.envelope&&f.type==='bill'&&!f.paused);
 const weeklyBudget=S=>{const f=envFlow(S);return f?(+f.amount||0)*7/periodDays(f):null};
@@ -746,7 +799,8 @@ function simulate(S,opt){
       }
     }
   });
-  const st={cash:cashNow(S),savings:+S.savings.amount||0,invest:+S.invest.amount||0,interest:0,
+  // unspent reward money is kept aside, so the plan never counts it as free cash
+  const st={cash:r2(cashNow(S)-rewardFund(S)),savings:+S.savings.amount||0,invest:+S.invest.amount||0,interest:0,
     debts:S.debts.map(r=>({bal:currentBalance(r,log),sim:[]}))};
   const clone=s=>({cash:s.cash,savings:s.savings,invest:s.invest,interest:s.interest,debts:s.debts.map(d=>({bal:d.bal,sim:d.sim.slice()}))});
   const paidWin=(di,d,a,b)=>{let s=0;for(const[dt,x]of actual[di])if(dt>a&&dt<=b)s+=x;for(const[dt,x]of d.sim)if(dt>a&&dt<=b)s+=x;return s};
@@ -1120,7 +1174,7 @@ function streakOdds(h){
 }
 /* 2) personal slip predictor: logistic regression on your own check-ins (ridge-regularized), checked on your most
    recent 25% of days against simply using your average slip rate. Only used when it actually predicts better. */
-const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks','more time on the related app or sites the day before','more screen time the day before'];
+const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks','more time on the related app or sites the day before','more screen time the day before','short sleep the night before','a low mood'];
 const sigm=z=>1/(1+Math.exp(-z));
 function slipFeatures(h,d,ctx,future){
   const L=ctx.logs[h.id]||{},y=D.add(d,-1),w=dow(d),f=[1];for(let i=0;i<7;i++)f.push(w===i?1:0);
@@ -1135,6 +1189,9 @@ function slipFeatures(h,d,ctx,future){
   const uy=!future&&ctx.usage?ctx.usage.get(y):null;
   f.push(uy?Math.min(2,Math.log1p(linkedMin(habitKey(h),uy))/3):0);
   f.push(uy&&uy.total?Math.min(2,Math.log1p(uy.total)/5):0);
+  // sleep the night before (iPhone Sleep automation, or estimated from first and last phone use) and mood
+  const sl=!future&&ctx.usage?sleepFor(d,ctx.usage):null;f.push(sl?Math.max(0,Math.min(1.5,(7-sl.hours)/2)):0);
+  const MD=state.mood||{},md=future?null:(MD[d]&&(MD[d].t||'')<'15:00'?MD[d]:MD[y]);f.push(md&&md.v<=2?1:0);
   return f;
 }
 // ridge logistic regression fitted exactly with Newton's method (a few steps, tiny matrix)
@@ -1160,7 +1217,8 @@ function slipModel(h,ctx){
   const X=days.map(d=>slipFeatures(h,d,ctx)),Y=days.map(d=>L[d]===0?1:0),cut=Math.floor(days.length*0.75);
   const wt=trainLogit(X.slice(0,cut),Y.slice(0,cut),1.5),pb=(Y.slice(0,cut).reduce((a,b)=>a+b,0)+1)/(cut+2);
   let bm=0,bb=0;for(let i=cut;i<X.length;i++){let z=0;for(let j=0;j<wt.length;j++)z+=X[i][j]*wt[j];bm+=(sigm(z)-Y[i])**2;bb+=(pb-Y[i])**2}
-  return {w:trainLogit(X,Y,1.5),skill:bb>0?1-bm/bb:0,base:(slips+1)/(days.length+2),n:days.length,slips};
+  let comb=null;try{comb=combineModel(h,ctx,L,days,X,Y,cut,wt,pb)}catch(e){console.error(e)}
+  return {w:trainLogit(X,Y,1.5),skill:bb>0?1-bm/bb:0,base:(slips+1)/(days.length+2),n:days.length,slips,comb,test:X.length-cut};
 }
 let slipCache=null;
 function slipModels(){
@@ -1240,6 +1298,205 @@ function weightProjection(){
       out.date=D.add(t,Math.round(days));out.early=D.add(t,Math.round(need/fast));out.late=Math.sign(slow)===Math.sign(b)&&Math.abs(slow)>1e-4?D.add(t,Math.round(need/slow)):null}}
   return out;
 }
+/* ---------- deeper signals ---------- */
+const tmin=t=>{const [h,m]=String(t||'0:0').split(':').map(Number);return (h||0)*60+(m||0)};
+const nowHM=()=>{const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes())};
+const hourLbl=h=>{const x=((h%24)+24)%24;return (x%12||12)+(x<12?' AM':' PM')};
+const quant=(a,q)=>{const s=a.slice().sort((x,y)=>x-y);return s.length?s[Math.min(s.length-1,Math.floor(q*s.length))]:0};
+let useMapCache=null;
+function useMapAll(){const k=typeof useRev!=='undefined'?useRev:0;if(useMapCache&&useMapCache.k===k)return useMapCache.m;const m=new Map();
+  if(typeof USEM!=='undefined')for(const M of Object.values(USEM))for(const [d,u] of Object.entries(M.days||{}))m.set(d,u);useMapCache={k,m};return m}
+/* 12) sleep for the night before `date`: from the iPhone Sleep automation when available, otherwise estimated from
+   the last app activity late at night and the first one in the morning */
+function sleepFor(date,U){
+  U=U||useMapAll();const u=U.get(date)||{};
+  if(u.sleep&&u.sleep.bed&&u.sleep.wake){const h=(tmin(u.sleep.wake)-tmin(u.sleep.bed)+(u.sleep.bed>='12:00'?1440:0))/60;if(h>1&&h<16)return {bed:u.sleep.bed,wake:u.sleep.wake,hours:h,src:'sleep'}}
+  const prev=U.get(D.add(date,-1))||{},ev=d=>[...Object.values(d.opens||{}).flat(),...Object.values(d.closes||{}).flat()];
+  const late=ev(prev).filter(t=>t>='19:00').sort(),early=ev(u).filter(t=>t<'05:00').sort(),morn=ev(u).filter(t=>t>='05:00').sort();
+  const bed=early.length?early[early.length-1]:late.length?late[late.length-1]:null,wake=morn[0]||null;if(!bed||!wake)return null;
+  const h=(tmin(wake)-tmin(bed)+(bed>='12:00'?1440:0))/60;return h>=2&&h<=14?{bed,wake,hours:h,src:'est'}:null;
+}
+/* 1) danger hours: when your slips and urges happen (plus related app opens on slip days), as a 3-hour window */
+function hourHist(h){
+  const w=new Array(24).fill(0);let n=0,slips=0,urges=0;
+  for(const t of Object.values((state.slipTimes||{})[h.id]||{})){w[+t.slice(0,2)]+=1;n+=1;slips++}
+  for(const u of state.urges||[])if(u.habitId===h.id&&u.time){w[+u.time.slice(0,2)]+=0.6;n+=0.6;urges++}
+  const key=habitKey(h),L=(state.habitLog||{})[h.id]||{},U=useMapAll();
+  if(key)for(const [d,v] of Object.entries(L))if(v===0){const u=U.get(d);if(!u)continue;for(const [app,ts] of Object.entries(u.opens||{}))if(key==='gambling'?GAMBLE_RE.test(app):plain(app).includes(key))for(const t of ts){w[+t.slice(0,2)]+=0.3;n+=0.3}}
+  return {w,n,slips,urges};
+}
+function dangerWindow(h){
+  const {w,n}=hourHist(h);if(n<4)return null;let best=null;for(let s=0;s<24;s++){const m=w[s]+w[(s+1)%24]+w[(s+2)%24];if(!best||m>best.m)best={s,m}}
+  const share=best.m/n;return share>=0.35?{start:best.s,end:(best.s+3)%24,share,n:Math.round(n),label:`${hourLbl(best.s)}–${hourLbl(best.s+3)}`}:null;
+}
+/* 3) the combined risk score: survival odds, the personal predictor and the weekday/payday rule, weighted by how well
+   each did on your most recent days, then calibrated so its percentages match what really happened */
+function hazArray(runs,r,k=3,max=200){const a=new Array(max+2).fill(r);for(let day=1;day<=max;day++){let n=0,d=0;for(const x of runs){if(x.event){if(x.len>=day-1)n++;if(x.len===day-1)d++}else if(x.len>=day)n++}a[day]=(d+k*r)/(n+k)}return a}
+function streakAt(L,d){let st=0,x=D.add(d,-1);while(L[x]===1&&st<400){st++;x=D.add(x,-1)}return st}
+function ruleStats(L,days,inc){const r=(days.filter(d=>L[d]===0).length+1)/(days.length+2),k=4,wd=[];
+  for(let w=0;w<7;w++){const ds=days.filter(d=>dow(d)===w),s=ds.filter(d=>L[d]===0).length;wd.push((s+k*r)/(ds.length+k))}
+  const pd=days.filter(d=>postIncome(inc,d)),ps=pd.filter(d=>L[d]===0).length;return {r,wd,post:(ps+k*r)/(pd.length+k)}}
+function ruleP(R,d,inc){const o=p=>p/(1-p);let z=o(R.wd[dow(d)]);if(postIncome(inc,d))z*=o(R.post)/o(R.r);return z/(1+z)}
+const logit=p=>{const q=Math.max(1e-4,Math.min(1-1e-4,p));return Math.log(q/(1-q))};
+function combineModel(h,ctx,L,days,X,Y,cut,wt,pb){
+  const cutDate=days[cut],Lpre=Object.fromEntries(Object.entries(L).filter(([d])=>d<cutDate)),hzPre=hazArray(streakRuns(Lpre),pb),RPre=ruleStats(L,days.slice(0,cut),ctx.inc);
+  const comps=[[],[],[]],ys=[];
+  for(let i=cut;i<X.length;i++){let z=0;for(let j=0;j<wt.length;j++)z+=X[i][j]*wt[j];comps[0].push(sigm(z));comps[1].push(hzPre[Math.min(200,streakAt(L,days[i])+1)]);comps[2].push(ruleP(RPre,days[i],ctx.inc));ys.push(Y[i])}
+  const brier=ps=>ps.reduce((s,p,i)=>s+(p-ys[i])**2,0),bb=ys.reduce((s,y)=>s+(pb-y)**2,0);if(!(bb>0))return null;
+  const w=comps.map(c=>Math.max(0,1-brier(c)/bb));if(!w.some(x=>x>0.01))return null;const W=w.reduce((a,b)=>a+b,0);
+  const zs=ys.map((_,i)=>comps.reduce((s,c,k)=>s+w[k]*logit(c[i]),0)/W);let a=1,b=0;
+  if(ys.length>=20&&ys.filter(Boolean).length>=3){const ab=trainLogit(zs.map(z=>[1,z]),ys,0.5);b=ab[0];a=Math.max(0.2,ab[1])}
+  const pc=zs.map(z=>sigm(b+a*z)),bins=[[0,0.15],[0.15,0.35],[0.35,1.01]].map(([lo,hi])=>{const ix=pc.map((p,i)=>i).filter(i=>pc[i]>=lo&&pc[i]<hi);return ix.length>=3?{pred:mean(ix.map(i=>pc[i])),act:mean(ix.map(i=>ys[i])),n:ix.length}:null}).filter(Boolean);
+  const base=(Y.filter(Boolean).length+1)/(Y.length+2);
+  return {w,a,b,skill:1-brier(pc)/bb,bins,hz:hazArray(streakRuns(L),base),rule:ruleStats(L,days,ctx.inc)};
+}
+function combinedRisk(h,d,futureStreak){
+  const {ctx,m}=slipModels(),M=m[h.id];if(!M)return null;
+  const f=slipFeatures(h,d,ctx,futureStreak!=null?{streak:futureStreak}:null);let z=0;f.forEach((x,j)=>z+=x*M.w[j]);const p1=sigm(z),C=M.comb;
+  const why=[];f.forEach((x,j)=>{if(!j||!x)return;const c=M.w[j]*x;if(c>0.2)why.push([c,FEAT[j]])});why.sort((a,b)=>b[0]-a[0]);const W3=why.slice(0,3).map(x=>x[1]);
+  if(!C||C.skill<=0.01)return M.skill>0.01?{p:p1,base:M.base,src:'model',skill:M.skill,why:W3}:null;
+  const L=ctx.logs[h.id]||{},st=futureStreak!=null?futureStreak+Math.max(0,D.diff(ctx.t,d)):streakAt(L,d),p2=C.hz[Math.min(200,st+1)],p3=ruleP(C.rule,d,ctx.inc),W=C.w.reduce((a,b)=>a+b,0);
+  return {p:sigm(C.b+C.a*(C.w[0]*logit(p1)+C.w[1]*logit(p2)+C.w[2]*logit(p3))/W),base:M.base,src:'combined',skill:C.skill,why:W3};
+}
+/* 4) the next 7 days, assuming the streak keeps going */
+function forecast7(h){
+  const t=D.today(),L=(state.habitLog||{})[h.id]||{},s=habitStats(h),from=L[t]!==undefined?1:0,out=[];
+  // if today is already logged, its clean day is part of the streak, so tomorrow starts one day later
+  for(let i=from;i<from+7;i++){const d=D.add(t,i),r=combinedRisk(h,d,d===t?null:Math.max(0,s.streak-from));if(!r)return null;out.push({d,p:r.p,base:r.base})}
+  return out;
+}
+/* 2) trigger chains: A on one day makes B more likely the same or next day, and B leads on to C */
+function triggerChains(){
+  const t=D.today(),H=state.habits||[];if(!H.length)return {chains:[],links:[]};
+  const U=useMapAll(),inc=incomeDaySet(state,D.add(t,-200),t),spend=new Map();for(const e of EXP)if(!e.reward&&!GAMBLE_RE.test(e.note||''))spend.set(e.date,(spend.get(e.date)||0)+(+e.amount||0));
+  const days=[];for(let i=150;i>=1;i--)days.push(D.add(t,-i));
+  const sp=days.map(d=>spend.get(d)||0).filter(x=>x>0),big=sp.length>=10?quant(sp,0.75):Infinity,ev={};
+  const add=(k,label,fn,effect,grp)=>{const on=new Set(days.filter(fn));if(on.size>=3)ev[k]={label,on,effect,grp:grp||k}};
+  add('payday','payday',d=>inc.has(d));add('bigspend','a big spending day',d=>(spend.get(d)||0)>=big,true);
+  add('late','a late night (on your phone after 1 AM)',d=>{const s=sleepFor(d,U);return !!(s&&s.bed>='01:00'&&s.bed<'06:00')},true,'sleep');
+  add('shortsleep','under 6 hours of sleep',d=>{const s=sleepFor(d,U);return !!(s&&s.hours<6)},true,'sleep');
+  add('lowmood','a low-mood day',d=>(((state.mood||{})[d]||{}).v||3)<=2);
+  add('urge','an urge',d=>(state.urges||[]).some(u=>u.date===d));
+  for(const app of ['instagram','tiktok','youtube','snapchat']){const vals=days.map(d=>linkedMin(app,U.get(d))).filter(x=>x>0);if(vals.length<8)continue;const q=quant(vals,0.75);add('heavy:'+app,`heavy ${app[0].toUpperCase()+app.slice(1)} use`,d=>linkedMin(app,U.get(d))>=q&&q>0,false,app)}
+  add('gambleapp','a gambling app opened',d=>{const u=U.get(d);return !!(u&&Object.keys(u.opens||{}).some(a=>GAMBLE_RE.test(a)))},false,'gambling');
+  add('adult','adult-site visits',d=>{const u=U.get(d);return !!(u&&(u.visits||{}).adult>0)},false,'adult');
+  for(const h of H){const L=state.habitLog[h.id]||{};add('slip:'+h.id,`a slip on “${h.name}”`,d=>L[d]===0,true,habitKey(h)||'slip:'+h.id)}
+  const keys=Object.keys(ev),links=[];
+  for(const A of keys)for(const B of keys){if(A===B||!ev[B].effect)continue;
+    // same-day pairs that are really one thing (opening the gambling app on a gambling slip day, a late night and short sleep) aren't triggers
+    // and last night's sleep is stored on the morning after, so nothing on the same day can lead to it
+    for(const lag of [0,1]){if(lag===0&&((A.startsWith('slip:')&&B.startsWith('slip:'))||ev[A].grp===ev[B].grp||ev[B].grp==='sleep'))continue;
+      const base=days.filter(d=>D.add(d,lag)<t),nA=base.filter(d=>ev[A].on.has(d)).length;if(nA<3)continue;
+      const co=base.filter(d=>ev[A].on.has(d)&&ev[B].on.has(D.add(d,lag))).length,pB=base.filter(d=>ev[B].on.has(D.add(d,lag))).length/base.length;
+      // strict: many pairs get tested, so a link needs 3+ co-occurrences and p < 0.01
+      if(co<3||!(pB>0))continue;const lift=(co/nA)/pB;if(lift<1.8)continue;const p=binomTail(nA,co,pB);if(p>0.01)continue;links.push({A,B,lag,lift,p,co,nA})}}
+  const chains=[];for(const a of links)for(const b of links)if(a.B===b.A&&a.A!==b.B&&b.A!==b.B)chains.push({steps:[a.A,a.B,b.B],lags:[a.lag,b.lag],score:Math.min(a.lift,b.lift)*Math.log1p(Math.min(a.co,b.co))});
+  chains.sort((x,y)=>y.score-x.score);const top=chains.slice(0,2);
+  const seenAB=new Set(),singles=links.filter(l=>!top.some(c=>c.steps.includes(l.A)&&c.steps.includes(l.B))).sort((x,y)=>y.lift-x.lift).filter(l=>{const k=l.A+'>'+l.B;if(seenAB.has(k))return false;seenAB.add(k);return true}).slice(0,3);
+  return {chains:top.map(c=>({...c,labels:c.steps.map(k=>ev[k].label)})),links:singles.map(l=>({...l,la:ev[l.A].label,lb:ev[l.B].label}))};
+}
+/* 6) playbook: on your hard days, what was different when you stayed clean? */
+const PLAYS={
+  lowScreen:{label:'lower screen time',plan:"If it's a hard evening, then my phone charges in another room from 10 PM."},
+  lowLinked:{label:'less time on the related app or sites the day before',plan:'If I catch myself opening it after 9 PM, then I close it and do something else for 10 minutes.'},
+  sleep:{label:'7+ hours of sleep the night before',plan:"If it's 11:30 PM, then the phone goes on the charger and I head to bed."},
+  mood:{label:'a better mood',plan:"If I'm feeling low, then I text a friend or go for a walk first."},
+  budget:{label:'staying under the daily budget',plan:"If it's payday, then I move my extra money to debt before anything else."}
+};
+const STARTER={gambling:['If it\'s payday, then I move the money to debt or savings before anything else.','If I feel the urge to bet, then I tap the urge button and wait 10 minutes.','If a gambling app is on my phone, then I delete it today.'],
+  adult:['If it\'s after 11 PM, then my phone charges outside the bedroom.','If an urge hits, then I tap the urge button and take a shower or a walk.'],
+  instagram:['If I open Instagram without a reason, then I close it after 5 minutes.','If it\'s after 10 PM, then Instagram stays closed (set an app limit).'],
+  other:['If an urge hits, then I tap the urge button and wait 10 minutes.','If it\'s my hardest time of day, then I plan something to do in advance.']};
+function playbook(h){
+  const t=D.today(),L=(state.habitLog||{})[h.id]||{},days=Object.keys(L).filter(d=>d<t&&d>=D.add(t,-180)).sort();if(days.length<21)return null;
+  const {ctx}=slipModels(),U=useMapAll(),inc=ctx.inc,R=ruleStats(L,days,inc),key=habitKey(h),wb=weeklyBudget(state);
+  const risk=days.map(d=>{const c=combinedRisk(h,d);return c?c.p:ruleP(R,d,inc)}),cut=quant(risk,0.6),hard=days.filter((d,i)=>risk[i]>=cut);
+  if(hard.filter(d=>L[d]===0).length<2||hard.length<8)return {plays:[],hard:hard.length};
+  // screen time without the habit's own app (otherwise "less Instagram" would just mean "didn't slip")
+  const scr=u=>u&&u.total?Math.max(0,u.total-(key&&key!=='adult'&&key!=='gambling'?linkedMin(key,u):0)):null;
+  const totals=days.map(d=>scr(U.get(d))).filter(x=>x>0),mt=totals.length?median(totals):null,lk=key?days.map(d=>linkedMin(key,U.get(d))).filter(x=>x>0):[],ml=lk.length?median(lk):null;
+  const spend=new Map();for(const e of EXP)if(!e.reward&&!GAMBLE_RE.test(e.note||''))spend.set(e.date,(spend.get(e.date)||0)+(+e.amount||0));
+  const F={
+    lowScreen:d=>{const x=scr(U.get(d));return mt&&x?x<mt:null},
+    lowLinked:d=>{if(!ml)return null;const u=U.get(D.add(d,-1));return u?linkedMin(key,u)<ml:null},
+    sleep:d=>{const s=sleepFor(d,U);return s?s.hours>=7:null},
+    mood:d=>{const m=(state.mood||{})[d];return m&&(m.t||'')<'15:00'?m.v>=4:null},
+    budget:d=>wb&&EXP.length?(spend.get(d)||0)<=wb/7:null};
+  const plays=[];
+  for(const [k,fn] of Object.entries(F)){const yes=[],no=[];for(const d of hard){const v=fn(d);if(v===true)yes.push(d);else if(v===false)no.push(d)}
+    if(yes.length<3||no.length<3)continue;const cy=yes.filter(d=>L[d]===1).length/yes.length,cn=no.filter(d=>L[d]===1).length/no.length;
+    if(cy-cn>=0.15&&cy>=cn*1.2)plays.push({k,...PLAYS[k],cy,cn,n:yes.length})}
+  return {plays:plays.sort((a,b)=>(b.cy-b.cn)-(a.cy-a.cn)).slice(0,3),hard:hard.length};
+}
+/* 5) purchases: habits you repeat (to plan around), and charges worth a second look */
+function purchaseInsights(){
+  const t=D.today(),out={coming:[],alerts:[]},recent=EXP.filter(e=>e.date>=D.add(t,-56)&&e.date<=t&&!e.reward),by=new Map();
+  for(const e of recent){const k=normNote(e.note);if(!k||GAMBLE_RE.test(e.note||''))continue;if(!by.has(k))by.set(k,[]);by.get(k).push(e)}
+  for(const [k,xs] of by){const wd={};for(const e of xs){const w=dow(e.date);(wd[w]=wd[w]||new Set()).add(weekStart(e.date))}
+    for(const [w,weeks] of Object.entries(wd)){if(weeks.size<4)continue;let d=t;while(dow(d)!==+w)d=D.add(d,1);if(xs.some(e=>e.date===d))continue;
+      const amts=xs.filter(e=>dow(e.date)===+w).map(e=>e.amount),hrs=xs.filter(e=>dow(e.date)===+w&&e.src==='applepay').map(e=>new Date(e.ts).getHours());
+      out.coming.push({k,name:xs[xs.length-1].note,d,amount:median(amts),hour:hrs.length>=2?Math.round(median(hrs)):null,weeks:weeks.size})}}
+  out.coming=out.coming.filter(c=>D.diff(t,c.d)<=6).sort((a,b)=>b.weeks-a.weeks||(a.d<b.d?-1:1)).slice(0,4).sort((a,b)=>a.d<b.d?-1:1);
+  const last14=EXP.filter(e=>e.date>=D.add(t,-13)&&!e.reward);
+  for(let i=0;i<last14.length;i++)for(let j=i+1;j<last14.length;j++){const a=last14[i],b=last14[j];
+    if(a.date===b.date&&Math.abs(a.amount-b.amount)<0.01&&normNote(a.note)===normNote(b.note)&&a.src!=='screenshot'&&b.src!=='screenshot'&&(a.src!=='applepay'||b.src!=='applepay'||Math.abs(a.ts-b.ts)<15*60000))
+      out.alerts.push({id:'dup:'+a.id+':'+b.id,kind:'dup',text:`Possible duplicate: ${esc(a.note||'a purchase')} ${$m(a.amount)} twice on ${lbl(fmtMD,a.date)}. Check your statement; if it's a double charge, the bank can reverse it.`})}
+  const byLong=new Map();for(const e of EXP)if(e.date>=D.add(t,-200)&&e.date<=t&&!e.reward){const k=normNote(e.note);if(!k)continue;if(!byLong.has(k))byLong.set(k,[]);byLong.get(k).push(e)}
+  for(const [k,xs] of byLong){if(xs.length<3)continue;const prev=xs.slice(0,-1).map(e=>e.amount),m=median(prev),lastE=xs[xs.length-1],cv=madev(prev)/(m||1);
+    if(cv<0.03&&m>3&&Math.abs(lastE.amount-m)/m>0.05&&lastE.date>=D.add(t,-30))out.alerts.push({id:'price:'+lastE.id,kind:'price',text:`${esc(lastE.note)} ${lastE.amount>m?'went up':'went down'}: ${$m(lastE.amount)} instead of the usual ${$m(m)}.`})}
+  const allAmts=EXP.map(e=>e.amount),gm=median(allAmts)||10;
+  for(const e of last14){const hist=(by.get(normNote(e.note))||[]).filter(x=>x.id!==e.id).map(x=>x.amount),hr=e.src==='applepay'?new Date(e.ts).getHours():null;
+    if((hist.length>=3&&e.amount>Math.max(40,4*median(hist)))||(!hist.length&&e.amount>Math.max(60,6*gm))||(hr!=null&&hr<5))
+      out.alerts.push({id:'odd:'+e.id,kind:'odd',text:`Unusual: ${esc(e.note||'a purchase')} ${$m(e.amount)} on ${lbl(fmtMD,e.date)}${hr!=null&&hr<5?` at ${hourLbl(hr)}`:''}. Was this you?`})}
+  const dm=state.settings.dismissed||{};out.alerts=out.alerts.filter(a=>!(dm[a.id]>=t)).slice(0,4);return out;
+}
+// results that only change when your data or the day changes
+const memoStore={};
+function memo(name,fn){const k=state.rev+'|'+(typeof expRev!=='undefined'?expRev:0)+'|'+(typeof useRev!=='undefined'?useRev:0)+'|'+D.today();const m=memoStore[name];if(m&&m.k===k)return m.v;let v;try{v=fn()}catch(e){console.error(e);v=null}memoStore[name]={k,v};return v}
+/* 10 + 11) two futures for the next 6 months, and the price of one slip */
+function slipCost(h){
+  const t=D.today(),L=(state.habitLog||{})[h.id]||{},key=habitKey(h),from=D.add(t,-120);
+  const days=Object.keys(L).filter(d=>d>=from&&d<t),slips=days.filter(d=>L[d]===0),cleans=days.filter(d=>L[d]===1);
+  let money=null,mins=null,how='';
+  if(key==='gambling'){const s=sumAmt(EXP.filter(e=>e.date>=from&&e.date<t&&GAMBLE_RE.test(e.note||'')));if(s>0&&slips.length){money=s/slips.length;how='the gambling charges in your spending'}}
+  const ts=trackStart();
+  if(money==null&&ts){const sp=new Map();for(const e of EXP)if(!e.reward)sp.set(e.date,(sp.get(e.date)||0)+(+e.amount||0));
+    const sd=slips.filter(d=>d>=ts),cd=cleans.filter(d=>d>=ts);
+    if(sd.length>=3&&cd.length>=7){const ma=mean(sd.map(d=>sp.get(d)||0)),mb=mean(cd.map(d=>sp.get(d)||0));if(ma-mb>=5){money=ma-mb;how='how much more you spend on slip days'}}}
+  const U=useMapAll();if(key){const su=slips.filter(d=>U.get(d)),cu=cleans.filter(d=>U.get(d));
+    if(su.length>=3){const a=mean(su.map(d=>linkedMin(key,U.get(d)))),b=cu.length>=3?mean(cu.map(d=>linkedMin(key,U.get(d)))):0;if(a-b>=5)mins=a-b}}
+  const logged=days.filter(d=>d>=D.add(t,-60)),rate=logged.length>=14?logged.filter(d=>L[d]===0).length/logged.length:null;
+  return {money,mins,how,rate};
+}
+let futCache={};
+function twoFutures(h){
+  const sim=getSim();if(futCache.key!==sim.key)futCache={key:sim.key};if(h.id in futCache)return futCache[h.id];
+  let v=null;try{const c=slipCost(h);
+    if(c.rate!=null&&c.rate>0){const exp=c.rate*182,s=habitStats(h),o=streakOdds(h),wb=weeklyBudget(state),base=sim.main;
+      v={rate:c.rate,expSlips:exp,perSlip:c.money,money:c.money!=null?c.money*exp:null,mins:c.mins,hours:c.mins!=null?c.mins*exp/60:null,how:c.how,base:base.debtFree,
+        p30:o?o.p30:null,medianLen:o?o.medianLen:null,d30:s.streak<30?D.add(D.today(),30-s.streak):null,d90:s.streak<90?D.add(D.today(),90-s.streak):null};
+      if(c.money&&wb&&totals().left>0.5){const clean=simWithWeekly(state,Math.max(5,wb-c.money*c.rate*7),{});v.clean=clean.debtFree;
+        if(clean.debtFree&&base.debtFree){v.daysSooner=D.diff(clean.debtFree,base.debtFree);v.perSlipDays=v.daysSooner/Math.max(1,exp)}}}
+  }catch(e){console.error(e)}
+  return futCache[h.id]=v;
+}
+/* 14) earned rewards: streak milestones unlock fun money that the plan sets aside */
+const REWARD_DEF={7:5,14:10,30:20,60:30,90:50,180:75,365:100};
+function rewardCfg(){if(state.settings.rewardsOff)return null;return Object.assign({},REWARD_DEF,state.settings.rewardAmts||{})}
+function rewardFund(S){const e=((S.rewards||{}).earned||[]).reduce((s,x)=>s+(+x.amount||0),0);let sp=0;for(const x of EXP)if(x.reward)sp+=+x.amount||0;return Math.max(0,r2(e-sp))}
+/* 9) payday lock: when pay lands and a habit gets harder after payday, move the spare money first */
+function paydayHabit(){
+  const H=state.habits||[],g=H.find(h=>habitKey(h)==='gambling');if(g)return g;const t=D.today(),inc=incomeDaySet(state,D.add(t,-200),t);
+  return H.find(h=>{const L=state.habitLog[h.id]||{},days=Object.keys(L).filter(d=>d<t);if(days.length<21)return false;const R=ruleStats(L,days,inc);
+    return R.post>=1.4*R.r&&days.filter(d=>L[d]===0&&postIncome(inc,d)).length>=2})||null;
+}
+function paydayInfo(){
+  const t=D.today(),inc=incomeDaySet(state,D.add(t,-2),t),day=[...inc].sort().pop();if(!day)return null;
+  if((state.paylock||{})[day])return null;const habit=paydayHabit();if(!habit)return null;
+  const M=getSim().main,path=noExtraPath(M).slice(0,43),buf=+state.settings.buffer||0;
+  const plan=M.events.some(e=>e.date===t&&(e.t==='extra'||e.t==='save'||e.t==='invest'));
+  return {day,habit,plan,free:state.cash.set?Math.max(0,Math.floor((Math.min(...path)-buf)/5)*5):null};
+}
 function rank(tips){return tips.map(x=>Object.assign(x,{score:(x.impact||0)*(x.conf||0)*(x.urg||1)})).sort((a,b)=>b.score-a.score)}
 
 /* ---------- state + storage ---------- */
@@ -1281,6 +1538,7 @@ function mergeUsage(a,b){
     for(const k of ['total','pickups'])if(v[k]!=null)o[k]=Math.max(o[k]||0,+v[k]);
     for(const k of ['apps','visits']){if(!v[k])continue;o[k]=o[k]||{};for(const [n,x] of Object.entries(v[k]))o[k][n]=Math.max(o[k][n]||0,+x)}
     for(const k of ['opens','closes']){if(!v[k])continue;o[k]=o[k]||{};for(const [n,ts] of Object.entries(v[k]))o[k][n]=[...new Set([...(o[k][n]||[]),...ts])].sort()}
+    if(v.sleep)o.sleep=Object.assign({},o.sleep||{},v.sleep);
     if(v.src)o.src=v.src;
   }
   return out;
@@ -1327,6 +1585,10 @@ async function processInbox(docs){
     }else if(x.type==='app'&&x.app){
       const day=useDay(date),k=x.event==='close'?'closes':'opens';day[k]=day[k]||{};const arr=day[k][x.app]=day[k][x.app]||[];if(!arr.includes(time)){arr.push(time);arr.sort()}
       useMonths.add(date.slice(0,7));opens++;
+    }else if(x.type==='sleep'){
+      // stored on the morning you wake up: a bedtime after noon belongs to the next day's night
+      const wake=x.event==='wake',d2=wake||time<'12:00'?date:D.add(date,1),day=useDay(d2);day.sleep=Object.assign({},day.sleep||{},wake?{wake:time}:{bed:time});
+      useMonths.add(d2.slice(0,7));opens++;
     }
   }
   months.forEach(saveExpMonth);useMonths.forEach(saveUseMonth);
@@ -1433,6 +1695,7 @@ function normalize(s){
   s.savings=s.savings||{amount:0};s.invest=s.invest||{amount:0};
   s.flows=s.flows||[];s.debts=s.debts||[];s.log=s.log||[];
   s.habits=s.habits||[];s.habitLog=s.habitLog||{};s.weights=s.weights||[];s.sweeps=s.sweeps||{};s.accounts=s.accounts||[];s.chat=s.chat||[];
+  s.slipTimes=s.slipTimes||{};s.checkTimes=s.checkTimes||{};s.urges=s.urges||[];s.mood=s.mood||{};s.plans=s.plans||[];s.rewards=s.rewards||{earned:[]};s.rewards.earned=s.rewards.earned||[];s.paylock=s.paylock||{};
   return s;
 }
 function setSync(s){
@@ -1647,7 +1910,7 @@ function viewToday(sim){
   const wk=A.budget?`<section class="card week"><div class="row"><div><div class="eyebrow">Spending this week</div><div class="spent" style="font-size:30px">${$m(A.spent)}<small>of ${$m0(A.budget)}</small></div></div>
     <button type="button" class="btn sm" data-tab="spending">Details</button></div>${meter(A)}</section>`:'';
   const tip=A.tips[0]?`<div class="tips">${tipHTML(A.tips[0])}</div>`:'';
-  return `<div class="cols"><div class="stack">${hero}${alert}${sweepCard()}${riskCard()}${quick}${wk}${winsCard()}${coachCard()}${tip}${journey}</div><div class="stack">${pend}${upc}</div></div>`;
+  return `<div class="cols"><div class="stack">${hero}${alert}${paydayCard()}${sweepCard()}${riskCard()}${focusCard()}${quick}${wk}${winsCard()}${coachCard()}${tip}${journey}</div><div class="stack">${pend}${upc}</div></div>`;
 }
 
 function chartSVG(M,w){
@@ -1806,7 +2069,7 @@ function viewSpending(){
   const rec=EXP.slice().reverse().slice(0,30);
   const recent=`<section class="card"><div class="card-h"><h2>Recent</h2><span class="sub">Tap one to edit</span></div><div>
     ${rec.map(e=>{const c=CAT[e.cat]||CAT.other;return `<button type="button" class="xrow" data-act="exp-edit" data-id="${esc(e.id)}"><i style="background:var(${c.col})"></i><div class="xn">${esc(e.note||c.name)}<small>${c.name} · ${lbl(fmtMD,e.date)}${e.via!=='bank'?' · '+esc(viaName(e.via)):''}</small></div><div class="xa">${$m(e.amount)}</div></button>`}).join('')||'<div class="empty">Your expenses will show up here.</div>'}</div></section>`;
-  return `<div class="cols"><div class="stack">${head}${tipsH}</div><div class="stack">${cats}${scorecardCard()}${recent}</div></div>`;
+  return `<div class="cols"><div class="stack">${head}${purchaseCard()}${tipsH}</div><div class="stack">${cats}${scorecardCard()}${recent}</div></div>`;
 }
 function expenseSheet(x,pre){
   const isNew=!x;x=x||Object.assign({date:D.today(),via:'bank'},pre||{});
@@ -1818,7 +2081,8 @@ function expenseSheet(x,pre){
       <div class="fld"><span>Category</span><div class="chips" role="radiogroup" aria-label="Category">${CATS.map(c=>`<label class="chip"><input type="radio" name="cat" value="${c.id}"${x.cat===c.id?' checked':''}><span><i style="background:var(${c.col})"></i>${c.name}</span></label>`).join('')}</div></div>
       <div class="fld"><span>Paid with</span><div class="chips" role="radiogroup" aria-label="Paid with"><label class="chip"><input type="radio" name="via" value="bank"${x.via==='bank'?' checked':''}><span>Debit / bank</span></label>${cards.map(d=>`<label class="chip"><input type="radio" name="via" value="${esc(d.id)}"${x.via===d.id?' checked':''}><span>${esc(d.name)}</span></label>`).join('')}</div></div>
       <div class="warnline" id="x-warn" hidden></div>
-      <label class="fld"><span>Date</span><input id="x-date" name="date" type="date" value="${x.date}"></label>`,
+      <label class="fld"><span>Date</span><input id="x-date" name="date" type="date" value="${x.date}"></label>
+      ${x.reward||rewardFund(state)>0?`<label class="check"><input type="checkbox" name="reward"${x.reward?' checked':''}><span>Paid with fun money (${$m0(rewardFund(state)+(x.reward?+x.amount||0:0))} ready). It won't count against your weekly budget.</span></label>`:''}`,
     submit:isNew?'Add':'Save',
     extra:isNew?[]:[{label:'Delete',cls:'danger',onClick:()=>{const old=removeExpense(x.id);render();toast('Expense deleted',old?()=>{addExpense(old);render()}:null)}}],
     onMount:f=>{
@@ -1839,7 +2103,7 @@ function expenseSheet(x,pre){
       const a=r2(num(fd.get('amount')));if(!(a>0)){toast('Enter an amount above $0');return false}
       const note=String(fd.get('note')||'').trim();
       let cat=fd.get('cat');if(!cat){const g=guessExpense(note);cat=g?g.cat:'other'}
-      const e={id:x.id||uid(),ts:x.ts||Date.now(),date:fd.get('date')||D.today(),amount:a,cat,note,via:fd.get('via')||'bank'};
+      const e={id:x.id||uid(),ts:x.ts||Date.now(),date:fd.get('date')||D.today(),amount:a,cat,note,via:fd.get('via')||'bank'};if(x.src)e.src=x.src;if(fd.get('reward')==='on')e.reward=true;
       if(!isNew)removeExpense(x.id);
       addExpense(e);render();
       toast(isNew?`Added ${$m(a)} · ${CAT[cat].name}`:'Saved',isNew?()=>{removeExpense(e.id);render()}:null);
@@ -1969,12 +2233,13 @@ function buildICS(opts){
   if(opts.risk){
     // 10) heads-up on days the slip predictor expects to be hard (at most 2 per habit per week, next 8 weeks)
     for(const h of state.habits||[]){const s=habitStats(h),picks=[];
-      for(let i=1;i<=56;i++){const d=D.add(t,i),m=slipRisk(h,d,s.streak);if(m&&m.p>=Math.max(0.25,1.8*m.base))picks.push({d,m})}
+      const dw=dangerWindow(h),trig=dw?`PT${Math.max(0,dw.start-1)}H30M`:'PT9H';
+      for(let i=1;i<=56;i++){const d=D.add(t,i),m=combinedRisk(h,d,s.streak);if(m&&m.p>=Math.max(0.25,1.8*m.base))picks.push({d,m})}
       const perW={};for(const p of picks.sort((a,b)=>b.m.p-a.m.p)){const w=weekStart(p.d);perW[w]=(perW[w]||0)+1;if(perW[w]>2)continue;
         const title=`Heads up: hard day for “${h.name}”`,d0=p.d.replace(/-/g,''),d1=D.add(p.d,1).replace(/-/g,'');
         L.push('BEGIN:VEVENT',`UID:risk-${h.id}-${p.d}@payoff-path`,`DTSTAMP:${stamp}`,`DTSTART;VALUE=DATE:${d0}`,`DTEND;VALUE=DATE:${d1}`,`SUMMARY:${ic(title)}`,
-          `DESCRIPTION:${ic(`About ${Math.round(p.m.p*100)}% chance of a slip (usually ${Math.round(p.m.base*100)}%)${p.m.why.length?': '+p.m.why.join(', '):''}. Plan something for the evening.`)}`,'TRANSP:TRANSPARENT',
-          'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${ic(title)}`,'TRIGGER:PT9H','END:VALARM','END:VEVENT');n++}}
+          `DESCRIPTION:${ic(`About ${Math.round(p.m.p*100)}% chance of a slip (usually ${Math.round(p.m.base*100)}%)${p.m.why&&p.m.why.length?': '+p.m.why.join(', '):''}.${dw?' Hardest time: '+dw.label+'.':''} Plan something for the evening.`)}`,'TRANSP:TRANSPARENT',
+          'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${ic(title)}`,`TRIGGER:${trig}`,'END:VALARM','END:VEVENT');n++}}
   }
   if(opts.daily){
     // a repeating evening event in the phone's own time zone (floating time), with an alert right at that time
@@ -2218,7 +2483,7 @@ function budgetWeeks(S){
   for(let i=0;i<occ.length;i++){
     const a=occ[i].date,b=occ[i+1]?occ[i+1].date:D.add(a,Math.round(periodDays(f)));
     if(b<=first)continue;
-    const inW=EXP.filter(e=>e.date>=a&&e.date<b),spent=r2(sumAmt(inW)),budget=+occ[i].amount;
+    const inW=EXP.filter(e=>e.date>=a&&e.date<b&&!e.reward),spent=r2(sumAmt(inW)),budget=+occ[i].amount;
     const w={a,b,spent,budget,n:inW.length,ok:inW.length>0&&spent<=budget+0.5,tracked:inW.length>0};
     if(b<=t)weeks.push(w);else if(a<=t)cur=w;
   }
@@ -2265,6 +2530,8 @@ function milestones(S){
   const goal=+S.settings.savingsGoal||0;
   if(goal)list.push({id:'save:goal',big:true,title:'Emergency fund full',cel:'Your emergency fund is full!',done:(+S.savings.amount||0)>=goal-0.5,prog:Math.min(1,(+S.savings.amount||0)/goal),detail:`${$m0(S.savings.amount)} of ${$m0(goal)}`,sub:`${$m0(goal)} set aside for surprises. Next stop: investing.`});
   list.push({id:'invest:first',big:true,title:'First money invested',cel:'You started investing!',done:(+S.invest.amount||0)>0,prog:0,detail:'',sub:'From debt to investing. That is the whole journey.'});
+  const UB=(S.urges||[]).filter(u=>u.outcome==='resisted').length;
+  for(const n of [1,5,10,25,50,100])list.push({id:'urge:'+n,big:n>=10,title:`${n} urge${n>1?'s':''} beaten`,cel:n===1?'First urge beaten!':`${n} urges beaten!`,done:UB>=n,prog:Math.min(1,UB/n),detail:`${UB} of ${n}`,sub:'Every urge you ride out makes the next one weaker.'});
   list.push({id:'log:first',big:false,title:'First expense logged',cel:'First expense logged',done:EXP.length>0,prog:0,detail:'',sub:''});
   list.forEach(m=>{m.prog=Math.max(0,Math.min(1,m.prog||0))});
   return {list,B,A};
@@ -2277,14 +2544,16 @@ function checkMilestones(){
   const {list}=milestones(state),got=state.milestones;
   // habit streaks: each milestone can be earned again after a slip (the id includes when the streak started)
   for(const h of state.habits||[]){const s=habitStats(h);if(!s.startD)continue;
-    for(const n of HAB_MS)if(s.streak>=n)list.push({id:`habit:${h.id}:${n}:${s.startD}`,done:true,big:n>=7,cel:`${n} days: ${h.name}!`,
-      sub:n>=30?`${n} days in a row. That's a real change, not a streak of luck.`:'One day at a time. Keep the chain going.'})}
+    const rc=rewardCfg();
+    for(const n of HAB_MS)if(s.streak>=n){const amt=rc&&rc[n]>0?rc[n]:0;list.push({id:`habit:${h.id}:${n}:${s.startD}`,done:true,big:n>=7,cel:`${n} days: ${h.name}!`,reward:amt?{amount:amt,habitId:h.id,n}:null,
+      sub:(n>=30?`${n} days in a row. That's a real change, not a streak of luck.`:'One day at a time. Keep the chain going.')+(amt?` You unlocked ${$m0(amt)} of guilt-free fun money.`:'')})}}
   const done=list.filter(m=>m.done);
   if(!got){state.milestones={};done.forEach(m=>state.milestones[m.id]=D.today());persist();return} // first run: record quietly
   const fresh=done.filter(m=>!got[m.id]);if(!fresh.length)return;
-  fresh.forEach(m=>got[m.id]=D.today());persist();
+  fresh.forEach(m=>{got[m.id]=D.today();if(m.reward){const R=state.rewards=state.rewards||{earned:[]};R.earned=R.earned||[];if(!R.earned.some(x=>x.id===m.id))R.earned.push({id:m.id,...m.reward,date:D.today()})}});persist();
+  if(fresh.some(m=>m.reward))simCache=null;
   const big=fresh.find(m=>m.big&&m.id.startsWith('debt'))||fresh.find(m=>m.big);
-  if(big)celebrate(big);else toast('★ '+fresh[0].cel);
+  if(big)celebrate(big);else toast('★ '+fresh[0].cel+(fresh[0].reward?` +${$m0(fresh[0].reward.amount)} fun money`:''));
 }
 function celebrate(m){
   celebrating=true;
@@ -2386,7 +2655,7 @@ function viewHabits(){
   const allDone=H.length&&H.every(h=>stats[h.id].today!==undefined);
   const today=`<section class="card"><div class="card-h"><h2>${lbl(fmtDay,t)}</h2>${H.length&&!allDone?`<button type="button" class="btn sm accent" data-act="hab-all">All clean today</button>`:''}</div>
     ${H.length?`<div class="habs">${H.map(h=>{const s=stats[h.id];return `<div class="hab">${ring(s.prog,s.streak,s.today===1)}
-      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?'Slipped today. Tomorrow is day 1.':s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}</small>${s.today===undefined?(()=>{const l=linkedLabel(habitKey(h),usageOn(t));return l?`<em class="uhint">${esc(l)}</em>`:''})():''}</div>
+      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?(()=>{const tm=((S.slipTimes||{})[h.id]||{})[t];return `Slipped${tm?' at '+fmtHM(tm):''}. Tomorrow is day 1. <button type="button" class="linkbtn" data-act="sliptime" data-id="${esc(h.id)}">${tm?'Change time':'Add the time'}</button>`})():s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}${(()=>{const n=(S.urges||[]).filter(u=>u.habitId===h.id&&u.outcome==='resisted').length;return n?` · ${n} urge${n>1?'s':''} beaten`:''})()}</small>${s.today===undefined?(()=>{const l=linkedLabel(habitKey(h),usageOn(t));return l?`<em class="uhint">${esc(l)}</em>`:''})():''}</div>
       <div class="hbtns" role="group" aria-label="${esc(h.name)} today"><button type="button" class="hb ok" data-act="hab" data-id="${esc(h.id)}" data-v="1" aria-pressed="${s.today===1}" aria-label="Clean today">✓</button><button type="button" class="hb no" data-act="hab" data-id="${esc(h.id)}" data-v="0" aria-pressed="${s.today===0}" aria-label="Slipped today">✗</button></div></div>`}).join('')}</div>`
       :`<div class="empty">Add the habits you want to quit or build.</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:8px"><button type="button" class="btn sm ghost" data-act="habits-edit" style="padding-left:0">${H.length?'Edit habits':'+ Add habits'}</button>
@@ -2418,7 +2687,7 @@ function viewHabits(){
       <div class="wlist">${W.slice(-4).reverse().map(w=>`<button type="button" class="xrow" data-act="weight-edit" data-id="${esc(w.id)}"><i style="background:var(--invest)"></i><div class="xn">${lbl(fmtDay,w.date)}</div><div class="xa">${wFmt(w.kg)} ${u}</div></button>`).join('')}</div>`
       :`<div class="empty">Log your weight now and then (once a week is plenty). The trend line smooths out daily ups and downs.</div>`}
     </section>`;
-  return `<div class="cols"><div class="stack">${riskCard()}${today}${streakOddsCard()}${cal}</div><div class="stack">${patternsCard()}${usageCard()}${weight}</div></div>`;
+  return `<div class="cols"><div class="stack">${riskCard()}${today}${focusCard()}${forecastCard()}${streakOddsCard()}${cal}</div><div class="stack">${futuresCard()}${playbookCard()}${patternsCard()}${rewardsCard()}${usageCard()}${weight}</div></div>`;
 }
 function drawWeight(){const el=$('#wchart');if(!el)return;const t=D.today(),from=wRange==='1m'?D.add(t,-31):wRange==='3m'?D.add(t,-92):wRange==='1y'?D.add(t,-366):'0000';
   const ws=state.weights.slice().sort((a,b)=>a.date<b.date?-1:1).filter(w=>w.date>=from);el.innerHTML=ws.length>1?weightChart(ws,Math.max(260,Math.round(el.clientWidth||520))):'<p class="hint">Not enough weigh-ins in this range.</p>'}
@@ -2526,27 +2795,180 @@ function sweepCard(){
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent sm" data-act="sweep-send">Send ${$m0(o.amt)}</button><button type="button" class="btn sm ghost" data-act="sweep-keep">Keep it</button></div></section>`;
 }
 /* ---------- 2) heads-up card ---------- */
+const fmtHM=v=>{if(!v)return '';const [h,m]=v.split(':').map(Number);return (h%12||12)+':'+pad(m)+(h<12?' AM':' PM')};
+function riskToday(h,t){return combinedRisk(h,t)}
 function riskCard(){
   const t=D.today(),dm=state.settings.dismissed||{};
-  // the personal predictor when it has proven itself, the simpler weekday/payday rule otherwise
+  // the combined forecast when it has proven itself, the simpler weekday/payday rule otherwise
   const rules=habitRisk(state);
   const R=(state.habits||[]).map(h=>{if((state.habitLog[h.id]||{})[t]!==undefined||dm['risk:'+h.id+':'+t])return null;
-    const m=slipRisk(h,t);if(m)return m.p>=Math.max(0.15,1.5*m.base)?{habit:h,model:m}:null;return rules.find(x=>x.habit.id===h.id)||null})
+    const m=riskToday(h,t);if(m)return m.p>=Math.max(0.15,1.5*m.base)?{habit:h,model:m}:null;return rules.find(x=>x.habit.id===h.id)||null})
     .filter(Boolean).sort((a,b)=>(b.model?b.model.p/b.model.base:b.rel)-(a.model?a.model.p/a.model.base:a.rel)).slice(0,2);
   const A=getAnalysis();let spend='';
   if(A.share&&A.days>=21&&A.budget&&!dm['riskspend:'+t]){const pk=A.share.indexOf(Math.max(...A.share));
     if(pk===dow(t)&&A.share[pk]>=0.22)spend=`<div class="rk"><span class="ti">$</span><div><b>${WD[pk]}s are your biggest spending day</b><p>About ${Math.round(A.share[pk]*100)}% of your spending happens today. ${$m0(Math.max(0,A.budget-A.spent))} left in this week's budget.</p></div><button type="button" class="x" data-act="risk-ok" data-id="spend" aria-label="Dismiss">×</button></div>`}
   if(!R.length&&!spend)return '';
   return `<section class="card risk"><div class="card-h"><h2>Heads up today</h2></div>
-    ${R.map(x=>`<div class="rk"><span class="ti">!</span><div><b>Hard day for “${esc(x.habit.name)}”</b><p>${x.model?`About a ${Math.round(x.model.p*100)}% chance of a slip today, versus ${Math.round(x.model.base*100)}% on a usual day${x.model.why.length?`. Higher because of ${x.model.why.join(', ')}`:''}.`:`More of your slips happen on ${x.reasons.join(' and ')}.`} Plan something for tonight and check in when you've made it.</p></div><button type="button" class="x" data-act="risk-ok" data-id="${esc(x.habit.id)}" aria-label="Dismiss">×</button></div>`).join('')}${spend}</section>`;
+    ${R.map(x=>{const dw=dangerWindow(x.habit),pl=plansFor(x.habit)[0];return `<div class="rk"><span class="ti">!</span><div><b>Hard day for “${esc(x.habit.name)}”</b><p>${x.model?`About a ${Math.round(x.model.p*100)}% chance of a slip today, versus ${Math.round(x.model.base*100)}% on a usual day${x.model.why&&x.model.why.length?`. Higher because of ${x.model.why.join(', ')}`:''}.`:`More of your slips happen on ${x.reasons.join(' and ')}.`}${dw?` Your hardest time is <strong>${dw.label}</strong>.`:''}${pl?` Your plan: ${esc(pl.text)}`:" Plan something for tonight and check in when you've made it."}</p></div><button type="button" class="x" data-act="risk-ok" data-id="${esc(x.habit.id)}" aria-label="Dismiss">×</button></div>`}).join('')}${spend}</section>`;
 }
 function patternsCard(){
   const L=habitLinks(state).slice(0,4);
   for(const h of state.habits||[]){const s=habitShift(h);if(!s)continue;const f=x=>x<0.05?'almost never':`about ${Math.max(1,Math.round(x*10))} in 10 days`;
     L.unshift({text:s.up?`Slips on “${esc(h.name)}” went from ${f(s.before)} to ${f(s.after)} starting ${lbl(fmtMD,s.since)}. Something changed around then.`:`Slips on “${esc(h.name)}” dropped from ${f(s.before)} to ${f(s.after)} since ${lbl(fmtMD,s.since)}. Whatever you changed is working.`})}
-  return `<section class="card"><div class="card-h"><h2>Patterns</h2><span class="sub">Habits × money</span></div>
-    ${L.length?`<div class="tips">${L.map(l=>`<div class="tip idea"><span class="ti" aria-hidden="true">⇄</span><div style="min-width:0"><p style="margin:0;color:var(--ink)">${l.text}</p></div><span></span></div>`).join('')}</div>`
-    :`<div class="empty">Keep checking in and logging spending. After a few weeks (and at least 3 slips on a habit), the app looks for real links: spending on slip days, slips after payday, habits that slip together. Only patterns that pass a statistics test show up.</div>`}</section>`;
+  const TC=memo('chains',triggerChains)||{chains:[],links:[]},cap=x=>x[0].toUpperCase()+x.slice(1);
+  const chains=TC.chains.map(c=>`<div class="tip idea"><span class="ti" aria-hidden="true">→</span><div style="min-width:0"><b>Trigger chain</b><div class="chain">${c.labels.map((l,i)=>`${i?`<i>${c.lags[i-1]?'→ next day →':'→'}</i>`:''}<span>${esc(cap(l))}</span>`).join('')}</div><p>Each step makes the next one more likely. Breaking the first link is the easiest place to stop it.</p></div><span></span></div>`);
+  const links=TC.links.map(l=>({text:`${esc(cap(l.la))} makes ${esc(l.lb)} ${l.lift.toFixed(1)}× more likely ${l.lag?'the next day':'the same day'} (${l.co} of ${l.nA} times).`}));
+  const all=[...L,...links];
+  return `<section class="card"><div class="card-h"><h2>Patterns</h2><span class="sub">Habits × money × phone</span></div>
+    ${all.length||chains.length?`<div class="tips">${chains.join('')}${all.map(l=>`<div class="tip idea"><span class="ti" aria-hidden="true">⇄</span><div style="min-width:0"><p style="margin:0;color:var(--ink)">${l.text}</p></div><span></span></div>`).join('')}</div>`
+    :`<div class="empty">Keep checking in and logging spending. After a few weeks (and at least 3 slips on a habit), the app looks for real links: spending on slip days, slips after payday, late nights, heavy app use, and chains of triggers. Only patterns that pass a statistics test show up.</div>`}</section>`;
+}
+/* ---------- stay on track: mood (13), urge button (7), today's plans ---------- */
+const MOODS=['😣','😕','😐','🙂','😄'],MOOD_LBL=['Rough','Low','Okay','Good','Great'];
+const DEF_ALTS=['Go for a walk outside','Take a cold shower','Text or call a friend','Do 20 push-ups','Leave the room','Drink a glass of water'];
+function plansFor(h){return (state.plans||[]).filter(p=>!p.habitId||p.habitId===h.id).sort((a,b)=>(b.src==='coach')-(a.src==='coach'))}
+function todayPlans(){
+  const t=D.today(),H=(state.habits||[]).map(h=>({h,p:((riskToday(h,t)||{}).p)||0})).sort((a,b)=>b.p-a.p),out=[];
+  for(const {h} of H)for(const p of plansFor(h))if(!out.includes(p))out.push(p);
+  for(const p of state.plans||[])if(!out.includes(p))out.push(p);return out;
+}
+function focusCard(){
+  const H=state.habits||[];if(!H.length)return '';
+  const t=D.today(),m=(state.mood||{})[t],U=(state.urges||[]).filter(u=>u.date>=D.add(t,-6)),beat=U.filter(u=>u.outcome==='resisted').length,plans=todayPlans().slice(0,2);
+  return `<section class="card focus"><div class="card-h"><h2>Stay on track</h2><span class="sub">${beat?`${beat} urge${beat>1?'s':''} beaten this week`:'One day at a time'}</span></div>
+    ${m?`<div class="moodset"><span>Feeling ${MOODS[m.v-1]} ${MOOD_LBL[m.v-1].toLowerCase()} today</span><button type="button" class="btn sm ghost" data-act="mood-clear">Change</button></div>`
+      :`<div class="moodq"><span>How are you feeling today?</span><div class="moods" role="group" aria-label="Mood">${MOODS.map((e,i)=>`<button type="button" data-act="mood" data-v="${i+1}" aria-label="${MOOD_LBL[i]}" title="${MOOD_LBL[i]}">${e}</button>`).join('')}</div></div>`}
+    ${plans.length?`<ul class="plans">${plans.map(p=>`<li><span>${esc(p.text)}</span></li>`).join('')}</ul>`:''}
+    <button type="button" class="btn urgebtn" data-act="urge">I have an urge</button></section>`;
+}
+let urgeTimer=null;
+function addReason(r){r=String(r||'').trim();if(!r)return;const L=state.settings.reasons=state.settings.reasons||[];if(!L.includes(r))L.push(r);state.settings.reasons=L.slice(-8)}
+function urgeSheet(){
+  const H=state.habits||[],t=D.today();if(!H.length)return;
+  const def=H.map(h=>({h,p:((riskToday(h,t)||{}).p)||0})).sort((a,b)=>b.p-a.p)[0].h;
+  const alts=state.settings.alts&&state.settings.alts.length?state.settings.alts:DEF_ALTS,reasons=state.settings.reasons||[];
+  const start=Date.now(),startHM=nowHM();let decided=false,hid=def.id;
+  const save=outcome=>{decided=true;const mins=Math.round((Date.now()-start)/6000)/10;state.urges=(state.urges||[]).concat({id:uid(),habitId:hid,date:t,time:startHM,outcome,mins}).slice(-500)};
+  openSheet({title:'Ride it out',lead:"Urges rise, peak and fade, usually within 10 to 20 minutes. Stay with it for 10. You don't have to act on it.",
+    body:`${H.length>1?`<div class="fld"><span>The urge is about</span><div class="chips" role="radiogroup" aria-label="Habit">${H.map(h=>`<label class="chip"><input type="radio" name="hid" value="${esc(h.id)}"${h.id===def.id?' checked':''}><span>${esc(h.name)}</span></label>`).join('')}</div></div>`:''}
+      <div class="timer" role="timer"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="tr-bg"/><circle cx="60" cy="60" r="52" class="tr-fg" id="urge-ring"/></svg><div><b id="urge-left">10:00</b><small id="urge-sub">Breathe slowly: in for 4, out for 6.</small></div></div>
+      <div class="fld"><span>Do one of these now</span><div class="alts">${alts.map(a=>`<span>${esc(a)}</span>`).join('')}</div></div>
+      ${reasons.length?`<div class="fld"><span>Why you're doing this</span><ul class="reasons">${reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul></div>`:''}
+      <label class="fld"><span>${reasons.length?'Add another reason (optional)':'Why are you quitting? (saved for next time)'}</span><input name="reason" autocomplete="off" placeholder="e.g. I want to be debt-free by summer"></label>`,
+    submit:'I made it',noFocus:true,
+    extra:[{label:'I slipped',onClick:f=>{const fd=new FormData(f);hid=fd.get('hid')||hid;addReason(fd.get('reason'));save('slipped');stampHabit(hid,t,0);setHabit(hid,t,0);toast('Logged. Be kind to yourself: tomorrow is day 1.')}}],
+    onMount:f=>{const ring=f.querySelector('#urge-ring'),C=2*Math.PI*52;ring.style.strokeDasharray=C;
+      f.querySelectorAll('input[name=hid]').forEach(r=>r.addEventListener('change',()=>{hid=r.value}));
+      const tick=()=>{const el=f.querySelector('#urge-left');if(!el){clearInterval(urgeTimer);return}const left=Math.max(0,600-(Date.now()-start)/1000);
+        el.textContent=Math.floor(left/60)+':'+pad(Math.floor(left%60));ring.style.strokeDashoffset=C*(1-left/600);
+        if(left<=0){clearInterval(urgeTimer);el.textContent='0:00';f.querySelector('#urge-sub').textContent='You rode it out. Tap "I made it".'}};
+      clearInterval(urgeTimer);urgeTimer=setInterval(tick,1000);tick()},
+    onClose:()=>{clearInterval(urgeTimer);if(!decided&&Date.now()-start>20000){save(null);persist()}},
+    onSubmit:fd=>{hid=fd.get('hid')||hid;addReason(fd.get('reason'));save('resisted');const n=(state.urges||[]).filter(u=>u.outcome==='resisted').length;commit(`Urge beaten. That's ${n} so far.`)}});
+}
+function urgeKitSheet(){
+  const alts=(state.settings.alts&&state.settings.alts.length?state.settings.alts:DEF_ALTS).join('\n'),rs=(state.settings.reasons||[]).join('\n');
+  openSheet({title:'Your urge kit',lead:'What shows up when you tap "I have an urge". One per line.',
+    body:`<label class="fld"><span>Things to do instead</span><textarea name="alts" rows="6" style="font-family:var(--body)">${esc(alts)}</textarea></label>
+      <label class="fld"><span>Your reasons</span><textarea name="rs" rows="4" style="font-family:var(--body)" placeholder="e.g. I want to be debt-free by summer">${esc(rs)}</textarea></label>`,
+    submit:'Save',noFocus:true,
+    onSubmit:fd=>{const L=v=>String(v||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);state.settings.alts=L(fd.get('alts')).slice(0,10);state.settings.reasons=L(fd.get('rs')).slice(0,8);commit('Saved')}});
+}
+function stampHabit(id,date,v){
+  const S=state.slipTimes=state.slipTimes||{},C=state.checkTimes=state.checkTimes||{};S[id]=S[id]||{};C[id]=C[id]||{};
+  if(v===0){if(date===D.today())S[id][date]=nowHM()}else delete S[id][date];
+  if(v===1){if(date===D.today())C[id][date]=nowHM()}else delete C[id][date];
+}
+function slipTimeSheet(id,date){
+  date=date||D.today();const h=(state.habits||[]).find(x=>x.id===id),cur=((state.slipTimes||{})[id]||{})[date]||nowHM();
+  openSheet({title:'When did it happen?',lead:`${esc(h?h.name:'')} · ${lbl(fmtDay,date)}. The app learns your hardest hours from this.`,
+    body:`<label class="fld"><span>Time</span><input type="time" name="tm" value="${cur}"></label>`,submit:'Save',
+    onSubmit:fd=>{const v=String(fd.get('tm')||'');if(!/^\d{2}:\d{2}/.test(v)){toast('Pick a time');return false}const S=state.slipTimes=state.slipTimes||{};(S[id]=S[id]||{})[date]=v.slice(0,5);commit('Saved')}});
+}
+/* ---------- 4 + 1) next 7 days and hardest hours ---------- */
+function hourBars(w,dw){const mx=Math.max(...w)||1,inW=h=>dw&&((h-dw.start+24)%24)<3;
+  return `<div class="hrs" role="img" aria-label="Slips and urges by hour of day">${w.map((v,h)=>`<i class="${inW(h)?'on':''}" style="height:${Math.max(4,v/mx*100).toFixed(0)}%" title="${hourLbl(h)}"></i>`).join('')}</div><div class="hrs-x"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span></div>`}
+function forecastCard(){
+  const H=state.habits||[];if(!H.length)return '';const t=D.today();
+  const rows=H.map(h=>{const f=forecast7(h),hh=hourHist(h),dw=dangerWindow(h);let fc;
+    if(f){const hi=f.reduce((a,b)=>b.p>a.p?b:a,f[0]);
+      fc=`<div class="fc7">${f.map(x=>{const lvl=x.p>=Math.max(0.25,1.6*x.base)?'hi':x.p>=1.25*x.base?'mid':'';return `<div class="${lvl}" title="${lbl(fmtDay,x.d)}: ${Math.round(x.p*100)}%"><span>${x.d===t?'Today':fmtWd.format(D.parse(x.d))}</span><b>${Math.round(x.p*100)}%</b></div>`}).join('')}</div>
+        <small>Most likely hard day: <b>${hi.d===t?'today':lbl(fmtDay,hi.d)}</b> (${Math.round(hi.p*100)}%; a usual day is ${Math.round(hi.base*100)}%).</small>`}
+    else{const M=slipModels().m[h.id];fc=M?`<small>No day stands out yet. Your slips don't follow a pattern the app can predict better than your average, about ${Math.round(M.base*100)}% a day. It keeps checking as you log.</small>`:'<small>The forecast starts after about a month of check-ins with at least 4 slips.</small>'}
+    const bars=hh.n>=2?`<div class="hrs-h">${dw?`Hardest hours: <b>${dw.label}</b> (${Math.round(dw.share*100)}% of your slips and urges)`:'When your slips and urges happen'}</div>${hourBars(hh.w,dw)}`
+      :'<small>Your hardest hours show up here: tapping ✗ records the time, and so does the urge button.</small>';
+    return `<div class="fcrow"><b>${esc(h.name)}</b>${fc}${bars}</div>`}).join('');
+  return `<section class="card"><div class="card-h"><h2>Next 7 days</h2><span class="sub">Chance of a slip, if your streak keeps going</span></div><div>${rows}</div></section>`;
+}
+/* ---------- 6) playbook ---------- */
+function planBtn(h,text){return (state.plans||[]).some(p=>p.text===text)?'<span class="pill good">In your plans</span>':`<button type="button" class="btn sm" data-act="plan-add" data-id="${esc(h.id)}" data-v="${esc(text)}">Add to my plans</button>`}
+function playbookCard(){
+  const H=state.habits||[];if(!H.length)return '';const mine=state.plans||[];
+  const sec=H.map(h=>{const pb=memo('pb:'+h.id,()=>playbook(h)),key=habitKey(h)||'other';
+    if(pb&&pb.plays.length)return `<div class="so"><b>${esc(h.name)}</b><small>From your ${pb.hard} hardest days (the ones the forecast rated riskiest):</small>${pb.plays.map(p=>`<div class="play"><p>With <b>${p.label}</b>, you stayed clean <b>${Math.round(p.cy*100)}%</b> of the time, versus ${Math.round(p.cn*100)}% without.</p>${planBtn(h,p.plan)}</div>`).join('')}</div>`;
+    const st=(STARTER[key]||STARTER.other).slice(0,2);
+    return `<div class="so"><b>${esc(h.name)}</b><small>${pb?`Not enough hard days yet to see what helps you (${pb.hard} so far).`:'Learning what helps on your hard days (needs about 3 weeks of check-ins).'} Plans that work for many people:</small>${st.map(x=>`<div class="play"><p>${esc(x)}</p>${planBtn(h,x)}</div>`).join('')}</div>`}).join('');
+  return `<section class="card"><div class="card-h"><h2>Your playbook</h2><span class="sub">What works for you</span></div><div class="solist">${sec}</div>
+    <div class="fld" style="margin-top:12px"><span>My if-then plans</span>${mine.length?`<ul class="plans" style="margin:0">${mine.map(p=>`<li><span>${esc(p.text)}${p.src==='coach'?' <span class="pill invest">this week</span>':''}</span><button type="button" class="x" data-act="plan-del" data-id="${esc(p.id)}" aria-label="Remove plan">×</button></li>`).join('')}</ul>`:'<p class="hint" style="margin:0">Add one above or write your own. Your plans show up on hard days.</p>'}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn sm" data-act="plan-new">Write my own</button><button type="button" class="btn sm ghost" data-act="urge-kit">Edit urge kit</button></div></section>`;
+}
+function planSheet(){
+  const H=state.habits||[];
+  openSheet({title:'New if-then plan',lead:'Pick a moment that tends to go wrong, and one small thing you will do instead.',
+    body:`${H.length>1?`<label class="fld"><span>For</span><select name="hid"><option value="">All habits</option>${H.map(h=>`<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('')}</select></label>`:''}
+      <label class="fld"><span>If…</span><input name="if" placeholder="it's Friday after 9 PM"></label><label class="fld"><span>Then I…</span><input name="then" placeholder="put my phone on the charger in the kitchen"></label>`,
+    submit:'Add plan',
+    onSubmit:fd=>{const a=String(fd.get('if')||'').trim().replace(/^if\s+/i,''),b=String(fd.get('then')||'').trim().replace(/^then\s+(i\s+)?/i,'');if(!a||!b){toast('Fill in both parts');return false}
+      state.plans=(state.plans||[]).concat({id:uid(),habitId:fd.get('hid')||(H.length===1?H[0].id:null),text:`If ${a}, then I ${b.replace(/\.$/,'')}.`,src:'me',at:D.today()});commit('Plan added')}});
+}
+/* ---------- 10 + 11) two futures ---------- */
+function futuresCard(){
+  const H=state.habits||[];if(!H.length)return '';
+  const rows=H.map(h=>{const v=twoFutures(h);if(!v)return '';const hrs=x=>x>=10?Math.round(x)+' h':(Math.round(x*10)/10)+' h',pd=Math.round((v.perSlipDays||0)*10)/10;
+    return `<div class="so"><b>${esc(h.name)}</b><small>Your current pace: a slip about every ${Math.max(1,Math.round(1/v.rate))} days (about ${Math.round(v.expSlips)} in 6 months).</small>
+      <div class="futs"><div class="fut good"><span class="eyebrow">Stay clean</span>${v.money!=null?`<div><b>+${$m0(v.money)}</b> kept</div>`:''}${v.hours!=null?`<div><b>${hrs(v.hours)}</b> back</div>`:''}${v.clean&&v.daysSooner>0?`<div>Debt-free <b>${lbl(fmtMY,v.clean)}</b></div>`:''}${v.d30?`<div>30 days clean <b>${lbl(fmtMD,v.d30)}</b></div>`:''}${v.d90?`<div>90 days <b>${lbl(fmtMD,v.d90)}</b></div>`:''}</div>
+      <div class="fut"><span class="eyebrow">Current pace</span>${v.money!=null?`<div><b>−${$m0(v.money)}</b> gone</div>`:''}${v.hours!=null?`<div><b>${hrs(v.hours)}</b> spent on it</div>`:''}${v.clean&&v.daysSooner>0?`<div>Debt-free <b>${v.base?lbl(fmtMY,v.base):'18 mo +'}</b></div>`:''}${v.p30!=null?`<div>30 days: <b>${Math.round(v.p30*100)}%</b> chance</div>`:''}${v.medianLen!=null?`<div>Streaks end around <b>day ${v.medianLen+1}</b></div>`:''}</div></div>
+      ${v.perSlip!=null?`<p class="small" style="margin:2px 0 0"><b>Price of one slip:</b> about ${$m0(v.perSlip)}${pd>=0.5?` and ${pd} day${pd===1?'':'s'} later debt-free`:''}${v.mins?`, plus ${Math.round(v.mins)} minutes`:''}. <span class="muted">Worked out from ${v.how}.</span></p>`
+        :v.mins?`<p class="small" style="margin:2px 0 0"><b>Price of one slip:</b> about ${Math.round(v.mins)} minutes of your day.</p>`:''}</div>`}).filter(Boolean);
+  if(!rows.length)return `<section class="card"><div class="card-h"><h2>Two futures</h2></div><p class="small muted" style="margin:0">After 2 weeks of check-ins, this compares the next 6 months if you stay clean with the next 6 months at your current pace: money, time and your debt-free date.</p></section>`;
+  return `<section class="card"><div class="card-h"><h2>Two futures</h2><span class="sub">The next 6 months</span></div><div class="solist">${rows.join('')}</div></section>`;
+}
+/* ---------- 14) rewards ---------- */
+function rewardsCard(){
+  const H=state.habits||[];if(!H.length)return '';const cfg=rewardCfg();
+  if(!cfg)return `<section class="card"><div class="card-h"><h2>Earned rewards</h2><button type="button" class="btn sm" data-act="rewards-edit">Turn on</button></div><p class="small muted" style="margin:0">Streak milestones can unlock guilt-free fun money, set aside in your plan.</p></section>`;
+  const fund=rewardFund(state),E=(state.rewards||{}).earned||[],lv=Object.keys(cfg).map(Number).filter(n=>cfg[n]>0).sort((a,b)=>a-b);
+  const next=H.map(h=>{const s=habitStats(h),n=lv.find(n=>n>s.streak);return n?`<div class="sumline"><span>${esc(h.name)}: ${n-s.streak} more day${n-s.streak===1?'':'s'} (day ${n})</span><b>+${$m0(cfg[n])}</b></div>`:''}).join('');
+  const M=getSim().main,tight=M.lowest.date&&M.lowest.cash<(+state.settings.buffer||0);
+  return `<section class="card"><div class="card-h"><h2>Earned rewards</h2><button type="button" class="btn sm ghost" data-act="rewards-edit">Change</button></div>
+    <div><div class="big2">${$m0(fund)}<small>fun money ready</small></div><div class="wsub">${fund>0?(tight?`Your plan is tight around ${lbl(fmtMD,M.lowest.date)}, so it's safest to spend it after that.`:"Guilt-free: it's already set aside in your plan. Anything fun, except betting."):'Unlocked by streak milestones, and set aside in your plan when you earn it.'}</div></div>
+    <div class="fld" style="margin-top:12px"><span>Next unlocks</span>${next||'<p class="hint" style="margin:0">Every milestone reached.</p>'}</div>
+    ${fund>0?`<p class="hint" style="margin:8px 0 0">When you spend it, tick "Paid with fun money" on the expense so it doesn't count against your weekly budget.</p>`:''}
+    ${E.length?`<p class="hint" style="margin:6px 0 0">Earned so far: ${$m0(E.reduce((s,x)=>s+(+x.amount||0),0))} from ${E.length} milestone${E.length>1?'s':''}.</p>`:''}</section>`;
+}
+function rewardsSheet(){
+  const cfg=Object.assign({},REWARD_DEF,state.settings.rewardAmts||{}),on=!state.settings.rewardsOff;
+  openSheet({title:'Earned rewards',lead:'Fun money each streak milestone unlocks. It comes out of your plan the day you earn it, so spending it never hurts your budget.',
+    body:`<label class="check"><input type="checkbox" name="on"${on?' checked':''}><span>Unlock rewards at streak milestones</span></label>
+      <div class="row2">${Object.keys(REWARD_DEF).map(n=>`<label class="fld"><span>${n} days</span><input name="r${n}" type="number" inputmode="decimal" min="0" step="1" value="${cfg[n]}"></label>`).join('')}</div>`,
+    submit:'Save',noFocus:true,
+    onSubmit:fd=>{state.settings.rewardsOff=fd.get('on')!=='on';const a={};for(const n of Object.keys(REWARD_DEF))a[n]=Math.max(0,r2(num(fd.get('r'+n))));state.settings.rewardAmts=a;commit('Saved')}});
+}
+/* ---------- 9) payday lock ---------- */
+function paydayCard(){
+  const P=memo('payday',paydayInfo);if(!P)return '';const mv=P.free>=20&&!P.plan;
+  return `<section class="card sweep"><div class="eyebrow">Payday lock</div><h3>Money just came in. Lock it away first.</h3>
+    <p class="small muted" style="margin:4px 0 10px">${P.plan?'Do "Your move today" above before anything else. ':''}${P.free==null?'Enter your bank balance so the app can tell you how much is safe to move. ':mv?`About ${$m0(P.free)} isn't needed for rent and bills in the next 6 weeks. Moving it to savings now puts it out of reach. `:P.plan?'':'All of it is needed for bills before next payday, so protect it tonight. '}The days after payday are hardest for “${esc(P.habit.name)}”.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${mv?`<button type="button" class="btn accent sm" data-act="paylock-save" data-v="${P.free}">Move ${$m0(P.free)} to savings</button>`:''}<button type="button" class="btn sm ghost" data-act="paylock-ok">${mv?'Not now':'Got it'}</button></div></section>`;
+}
+/* ---------- 5) purchase predictions and alerts ---------- */
+function purchaseCard(){
+  const P=memo('purchases',purchaseInsights);if(!P||(!P.coming.length&&!P.alerts.length))return '';
+  const A=getAnalysis(),left=A.budget?A.budget-A.spent:null,thisWeek=P.coming.filter(c=>c.d<A.period.end).reduce((s,c)=>s+c.amount,0);
+  return `<section class="card"><div class="card-h"><h2>Purchases to watch</h2><span class="sub">From your own habits</span></div>
+    ${P.alerts.map(a=>`<div class="rk"><span class="ti">${a.kind==='dup'?'2×':a.kind==='price'?'↕':'?'}</span><div><p style="margin:0;color:var(--ink)">${a.text}</p></div><button type="button" class="x" data-act="dismiss" data-id="${esc(a.id)}" aria-label="Dismiss">×</button></div>`).join('')}
+    ${P.coming.length?`<div class="fld" style="margin-top:${P.alerts.length?12:0}px"><span>Coming up, going by your usual week</span>${P.coming.map(c=>`<div class="sumline"><span>${esc(c.name)} · ${c.d===D.today()?'today':WD[dow(c.d)]}${c.hour!=null?' around '+hourLbl(c.hour):''}</span><b>~${$m0(c.amount)}</b></div>`).join('')}</div>`:''}
+    ${thisWeek>0&&left!=null?`<p class="small muted" style="margin:8px 0 0">${$m0(Math.max(0,left))} left in this week's budget. Your usual buys still to come this week add up to about ${$m0(thisWeek)}.</p>`:''}</section>`;
 }
 /* ---------- background jobs: heavy replays run in small slices so the app never freezes ---------- */
 const bgJobs={};
@@ -2660,14 +3082,17 @@ function streakOddsCard(){
     if(!o)return `<div class="so"><b>${esc(h.name)}</b><small>Needs about 2 weeks of check-ins (and at least 2 slips) to estimate your odds.</small></div>`;
     const bar=(l,p)=>`<div class="sobar"><span>${l}</span><i><em style="width:${Math.round(p*100)}%"></em></i><strong>${Math.round(p*100)}%</strong></div>`;
     return `<div class="so"><b>${esc(h.name)}</b>${bar(`Reach ${o.next} days`,o.pNext)}${o.p30!=null&&o.next<30?bar('Reach 30 days',o.p30):''}
-      <small>${o.medianLen!=null?`Your streaks usually end around day ${o.medianLen+1}. `:''}${o.danger?`Watch day ${o.danger.day}${o.danger.day===o.c+1?' (tomorrow)':''}: that's where your streaks tend to break. `:''}${rf&&rf.length?`What raises your risk: ${rf.join(', ')}. `:''}${M&&M.skill>0.01?`The predictor beats plain averages by ${Math.round(M.skill*100)}% on your recent days.`:M?'The predictor is still learning (not yet better than averages).':''}</small></div>`}).join('');
+      <small>${o.medianLen!=null?`Your streaks usually end around day ${o.medianLen+1}. `:''}${o.danger?`Watch day ${o.danger.day}${o.danger.day===o.c+1?' (tomorrow)':''}: that's where your streaks tend to break. `:''}${rf&&rf.length?`What raises your risk: ${rf.join(', ')}. `:''}${M&&M.skill>0.01?`The predictor beats plain averages by ${Math.round(M.skill*100)}% on your recent days.`:M?'The predictor is still learning (not yet better than averages).':''}</small>${calibHTML(M)}</div>`}).join('');
   return `<section class="card"><div class="card-h"><h2>Streak odds</h2><span class="sub">From your own history</span></div><div class="solist">${rows}</div></section>`;
 }
+/* 3) the combined forecast: how much it trusts each method, and whether its percentages come true */
+function calibHTML(M){const C=M&&M.comb;if(!C||C.skill<=0.01)return '';const W=C.w.reduce((a,b)=>a+b,0)||1,pc=x=>Math.round(x*100)+'%';
+  return `<small><b>Combined forecast</b> (${pc(C.w[1]/W)} streak odds, ${pc(C.w[0]/W)} personal predictor, ${pc(C.w[2]/W)} weekday and payday rule), checked on your last ${M.test} days${C.bins.length?': '+C.bins.map(b=>`when it said about ${pc(b.pred)}, you slipped ${pc(b.act)} of the time`).join('; '):''}. Close numbers mean you can trust its percentages.</small>`}
 /* 9) weekly coach (claude.ai version) */
 function coachCard(){
   if(!IS_ARTIFACT)return '';const c=state.coach,fresh=c&&c.week===weekStart(D.today());
   return `<section class="card coach" id="coach-card"><div class="card-h"><h2>Weekly coach</h2><span class="sub">${c?'Written '+lbl(fmtMD,c.at):'Written by Claude'}</span></div>
-    <div class="coach-text" id="coach-text">${c?esc(c.text):'<span class="muted">A short, personal briefing on your week: money, streaks, what to watch, and one thing to focus on.</span>'}</div>
+    <div class="coach-text" id="coach-text">${c?esc(c.text):'<span class="muted">A short, personal briefing on your week: money, streaks, patterns, what to watch, and if-then plans for the week ahead.</span>'}</div>${(()=>{const cp=(state.plans||[]).filter(p=>p.src==='coach');return cp.length?`<ul class="plans">${cp.map(p=>`<li><span>${esc(p.text)}</span></li>`).join('')}</ul>`:''})()}
     <div style="margin-top:10px"><button type="button" class="btn sm${fresh?'':' accent'}" data-act="coach">${fresh?'Write a new one':c?'Get this week\'s briefing':'Get my briefing'}</button></div></section>`;
 }
 function coachData(){
@@ -2676,20 +3101,39 @@ function coachData(){
     goal_date:S.settings.goalDate||null,chance_bank_stays_positive_60d:O?Math.round(O.pSafe*100)+'%':null,
     this_week:{spent:A.spent,budget:A.budget,forecast:A.forecast},last_week:B.weeks.length?{spent:B.weeks[B.weeks.length-1].spent,budget:B.weeks[B.weeks.length-1].budget}:null,under_budget_streak_weeks:B.streak,
     top_categories_30d:A.cats.slice(0,4).map(c=>({name:c.c.name,spent:r2(c.cur)})),interest_avoided:interestAvoided(S).total,
-    habits:(S.habits||[]).map(h=>{const s=habitStats(h),o=streakOdds(h),rk=slipRisk(h,t);return {name:h.name,streak_days:s.streak,best:s.best,clean_last_30:s.l30?Math.round(s.c30/s.l30*100)+'%':null,chance_next_goal:o?Math.round(o.pNext*100)+'% to reach '+o.next+' days':null,risk_today:rk?Math.round(rk.p*100)+'%':null}}),
+    habits:(S.habits||[]).map(h=>{const s=habitStats(h),o=streakOdds(h),rk=combinedRisk(h,t);return {name:h.name,streak_days:s.streak,best:s.best,clean_last_30:s.l30?Math.round(s.c30/s.l30*100)+'%':null,chance_next_goal:o?Math.round(o.pNext*100)+'% to reach '+o.next+' days':null,risk_today:rk?Math.round(rk.p*100)+'%':null}}),
     bills_next_7_days:M.events.filter(e=>!e.overdue&&e.date<=D.add(t,7)&&(e.t==='bill'||e.t==='sched'||e.t==='min')&&!e.env).map(e=>({what:e.label,amount:Math.abs(e.amount),date:e.date})),
-    smart_tips:A.tips.slice(0,3).map(x=>x.title.replace(/<[^>]+>/g,''))};
+    smart_tips:A.tips.slice(0,3).map(x=>x.title.replace(/<[^>]+>/g,'')),patterns_and_predictions:deepData()};
+}
+function deepData(){
+  const S=state,t=D.today(),H=S.habits||[],pc=x=>Math.round(x*100)+'%',TC=memo('chains',triggerChains)||{chains:[],links:[]};
+  const last7=k=>{const v=[];for(let i=0;i<7;i++){const x=k(D.add(t,-i));if(x!=null)v.push(x)}return v.length?Math.round(mean(v)*10)/10:null};
+  const U=(S.urges||[]).filter(u=>u.date>=D.add(t,-6));
+  return {
+    hardest_hours:H.map(h=>({habit:h.name,window:(dangerWindow(h)||{}).label||null})),
+    next_7_days:H.map(h=>{const f=forecast7(h);return {habit:h.name,chance_by_day:f?f.map(x=>fmtWd.format(D.parse(x.d))+' '+pc(x.p)):null,usual:f?pc(f[0].base):null}}),
+    trigger_chains:TC.chains.map(c=>c.labels.join(' -> ')),trigger_links:TC.links.map(l=>`${l.la} -> ${l.lb} (${l.lift.toFixed(1)}x, ${l.lag?'next day':'same day'})`),
+    what_helps_on_hard_days:H.map(h=>{const p=memo('pb:'+h.id,()=>playbook(h));return {habit:h.name,helps:p&&p.plays.length?p.plays.map(x=>`${x.label}: clean ${pc(x.cy)} vs ${pc(x.cn)}`):null}}),
+    two_futures_6_months:H.map(h=>{const v=twoFutures(h);return v?{habit:h.name,slip_every_days:Math.round(1/v.rate),money_at_stake:v.money!=null?Math.round(v.money):null,hours_at_stake:v.hours!=null?Math.round(v.hours):null,debt_free_if_clean:v.clean||null,debt_free_current_pace:v.base||null,price_of_one_slip:v.perSlip!=null?Math.round(v.perSlip):null}:null}).filter(Boolean),
+    urges_last_7_days:{beaten:U.filter(u=>u.outcome==='resisted').length,slipped:U.filter(u=>u.outcome==='slipped').length},
+    mood_avg_last_7_days_1_to_5:last7(d=>((S.mood||{})[d]||{}).v||null),sleep_avg_hours_last_7_days:last7(d=>{const x=sleepFor(d);return x?x.hours:null}),
+    fun_money_ready:rewardFund(S),current_if_then_plans:(S.plans||[]).map(p=>p.text)};
 }
 async function runCoach(btn){
   const sample=IS_ARTIFACT?await window.claude.use('sample'):null;if(!sample){toast("Claude isn't available here");return}
   const el=$('#coach-text');btn.disabled=true;el.innerHTML='<span class="muted">Thinking about your week…</span>';
   const prompt=`You are a warm, direct coach for a university student in Montreal who is paying off debt, sticking to a weekly budget and quitting some habits. Using ONLY the data below, write this week's briefing.
 Rules: 4 to 6 short sentences in plain, friendly English. Use specific numbers from the data. Mention one win, one thing to watch (a tight day, a risky habit day, a bill), and where the debt plan stands. Never shame or lecture about habits; be encouraging and practical. No investment advice. No markdown, no bullet points.
-End with a final line that starts with "This week's focus:" followed by one concrete action.
+Use the patterns_and_predictions section: name the riskiest day or hour for the week ahead, and if there is a trigger chain or something that helps on hard days, use it.
+Then write a line that starts with "This week's focus:" followed by one concrete action.
+Then write 1 or 2 lines that each start with "PLAN: " followed by an if-then plan for next week, in the form "If <a specific situation from the data, like a risky day, hour or trigger>, then I <one small concrete action>." Don't repeat the current_if_then_plans.
 
 DATA:
 ${JSON.stringify(coachData())}`;
-  try{const {text}=await sample(prompt,{cache:false,onText:({text})=>{el.textContent=text}});state.coach={week:weekStart(D.today()),text:text.trim(),at:D.today()};commit()}
+  try{const {text}=await sample(prompt,{cache:false,onText:({text})=>{el.textContent=text}});
+    const lines=text.split(/\n/),plans=lines.filter(l=>/^\s*PLAN:/i.test(l)).map(l=>l.replace(/^\s*PLAN:\s*/i,'').trim()).filter(Boolean).slice(0,2),body=lines.filter(l=>!/^\s*PLAN:/i.test(l)).join('\n').trim();
+    const wk=weekStart(D.today());state.coach={week:wk,text:body,at:D.today()};
+    if(plans.length)state.plans=(state.plans||[]).filter(p=>p.src!=='coach').concat(plans.map(x=>({id:uid(),habitId:null,text:x,src:'coach',week:wk,at:D.today()})));commit()}
   catch(e){el.textContent=(e&&e.text)||'';toast(e&&e.code==='not_granted'?'Claude was not allowed for this page':e&&e.code==='rate_limited'?'Too many requests. Try again later.':"Couldn't write the briefing right now")}
   btn.disabled=false;
 }
@@ -2871,6 +3315,7 @@ const INBOX_URL='https://api.github.com/repos/KareemJandali/payoff-path-data/con
 function autoGuide(){
   const purchase='{"type":"purchase","date":"[Day]","time":"[Time]","merchant":"[Merchant]","amount":"[Amount]","card":"[Card]"}';
   const app='{"type":"app","date":"[Day]","time":"[Time]","app":"Instagram","event":"open"}';
+  const sleepBed='{"type":"sleep","date":"[Day]","time":"[Time]","event":"bed"}';
   const copyBtn=(v,l)=>`<button type="button" class="btn sm" data-act="copy" data-v="${esc(v)}">${l}</button>`;
   openSheet({title:'iPhone automations',lead:`Each Apple Pay tap and app open drops a tiny note in your private mailbox. ${IS_ARTIFACT?'Claude moves them into your app at 12:30, 5:30 and 9:40 PM.':'The app picks them up as soon as it opens.'}`,
     body:`<div class="guide">
@@ -2891,6 +3336,10 @@ function autoGuide(){
       <ol><li>Automation → <b>+</b> → <b>App</b> → choose <b>Instagram</b> → <b>Is Opened</b> → Run Immediately.</li>
         <li>Same steps as above, but use this text (change the app name for each app):<div class="code">${esc(app)}</div>${copyBtn(app,'Copy text')}</li>
         <li>Repeat for any gambling apps. For time spent, also add an <b>Is Closed</b> automation with <code>"event":"close"</code>.</li></ol>
+      <h4>4 · Sleep (optional, sharpens predictions)</h4>
+      <ol><li>Automation → <b>+</b> → <b>Sleep</b> → <b>Bedtime Begins</b> → Run Immediately. Same steps, with this text:<div class="code">${esc(sleepBed)}</div>${copyBtn(sleepBed,'Copy text')}</li>
+        <li>Another one: <b>Sleep</b> → <b>Waking Up</b>, with <code>"event":"wake"</code>.</li>
+        <li>No Sleep schedule? Skip this: the app estimates sleep from your last app use at night and the first one in the morning.</li></ol>
       <p class="hint">Apple doesn't let any app read Screen Time totals. For minutes per app, drop a Screen Time screenshot in the Claude tab once in a while.</p></div>`,
     submit:'Done',noCancel:true,noFocus:true,onSubmit:()=>{}});
 }
@@ -2917,17 +3366,32 @@ function render(){
   if(tab==='habits')drawWeight();
   if(tab==='claude'){const th=$('#thread');if(th)th.scrollTop=th.scrollHeight}
   setTimeout(checkMilestones,0);
+  clearTimeout(sigT);sigT=setTimeout(publishSignals,1500);
+}
+/* signals/main: tonight's risk, hardest hours and plans, read by the evening Claude task to time its nudges */
+let sigT=null,sigLast=null;try{sigLast=localStorage.getItem('payoff-path.sig')}catch(e){}
+function publishSignals(){
+  if(!state||mode!=='db'||!expDb||readOnly)return;let o;
+  try{const t=D.today(),H=state.habits||[];
+    o={date:t,gambling_habit:H.some(h=>habitKey(h)==='gambling'),payday_dates:[...incomeDaySet(state,D.add(t,-2),D.add(t,14))].sort(),
+      habits:H.map(h=>{const dw=dangerWindow(h),r=combinedRisk(h,t),f=forecast7(h)||[],pl=plansFor(h)[0];
+        return {name:h.name,key:habitKey(h),checked_in_today:(state.habitLog[h.id]||{})[t]!==undefined,window:dw?{start_hour:dw.start,end_hour:dw.end,label:dw.label}:null,
+          risk_today:r?Math.round(r.p*100):null,usual:r?Math.round(r.base*100):null,next7:f.map(x=>({date:x.d,risk:Math.round(x.p*100),elevated:x.p>=Math.max(0.2,1.4*x.base)})),plan:pl?pl.text:null}})}}
+  catch(e){console.error(e);return}
+  const js=JSON.stringify(o);if(js===sigLast)return;sigLast=js;try{localStorage.setItem('payoff-path.sig',js)}catch(e){}
+  expDb.doc('signals/main').set({...o,rev:Date.now(),updated:new Date().toISOString()}).catch(()=>{sigLast=null});
 }
 function drawChart(){const el=$('#chart');if(!el||!state)return;el.innerHTML=chartSVG(getSim().main,Math.max(280,Math.round(el.clientWidth||600)))}
 
 /* ---------- sheet ---------- */
-let sheetSubmit=null;
+let sheetSubmit=null,sheetClose=null;
 function openSheet(o){
   const f=$('#sheet-form');
   f.innerHTML=`<h3>${esc(o.title)}</h3>${o.lead?`<p class="lead">${o.lead}</p>`:''}${o.body}
     <div class="sheet-acts">${(o.extra||[]).map((x,i)=>`<button type="button" class="btn ${x.cls||''}" data-x="${i}">${esc(x.label)}</button>`).join('')}<span class="sp"></span>
     ${o.noCancel?'':'<button type="button" class="btn ghost" data-x="cancel">Cancel</button>'}<button type="submit" class="btn primary">${esc(o.submit||'Save')}</button></div>`;
-  sheetSubmit=o.onSubmit;$('#toast').hidden=true;
+  if(sheetClose){const c=sheetClose;sheetClose=null;try{c()}catch(e){}}
+  sheetSubmit=o.onSubmit;sheetClose=o.onClose||null;$('#toast').hidden=true;
   f.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{const x=b.dataset.x;if(x==='cancel')return closeSheet();const h=o.extra[+x];if(h.onClick(f,b)!==false)closeSheet()});
   $('#sheet').hidden=false;
   if(o.onMount)o.onMount(f);
@@ -2935,7 +3399,7 @@ function openSheet(o){
   const first=f.querySelector('input:not([type=checkbox]):not([type=radio]),select,textarea');
   if(first&&!o.noFocus){try{first.focus({preventScroll:true});if(first.value&&first.select)first.select()}catch(e){}}
 }
-function closeSheet(){$('#sheet').hidden=true;$('#sheet-form').innerHTML='';sheetSubmit=null}
+function closeSheet(){if(sheetClose){const c=sheetClose;sheetClose=null;try{c()}catch(e){console.error(e)}}$('#sheet').hidden=true;$('#sheet-form').innerHTML='';sheetSubmit=null}
 $('#sheet-form').addEventListener('submit',e=>{e.preventDefault();if(sheetSubmit&&sheetSubmit(new FormData(e.target),e.target)!==false)closeSheet()});
 // chat composer: submit sends; on a computer, Enter sends and Shift+Enter makes a new line
 document.addEventListener('submit',e=>{if(e.target&&e.target.id==='composer'){e.preventDefault();sendChat()}});
@@ -2944,8 +3408,8 @@ document.addEventListener('input',e=>{if(e.target&&e.target.id==='chat-in'){e.ta
 $('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#celebrate').hidden){$('#celebrate').hidden=true;celebrating=false}else if(!$('#sheet').hidden)closeSheet()});
 let toastT=null;
-function toast(msg,undo){
-  const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${undo?'<button type="button">Undo</button>':''}`;t.hidden=false;
+function toast(msg,undo,label){
+  const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${undo?`<button type="button">${esc(label||'Undo')}</button>`:''}`;t.hidden=false;
   if(undo)t.querySelector('button').onclick=()=>{t.hidden=true;undo()};
   clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,undo?6000:2800);
 }
@@ -3114,6 +3578,7 @@ function afterMoney(a){
     <p class="small muted" style="margin:0">The rest stays in your account for rent, food and bills. Once you've sent it, tap "I did it" on the Today screen.</p>`;
   else{const lw=M.lowest,tight=lw.date&&lw.cash<(+state.settings.buffer||0)+100;
     body=`<p class="lead">Keep it in your account for now.</p><p class="small muted" style="margin:0">${tight?`Money gets tight around ${lbl(fmtDay,lw.date)}, so this is your safety net until then.`:'It helps cover rent, food and bills in the coming weeks.'} The plan will suggest an extra payment once it's safe.</p>`}
+  const ph=paydayHabit();if(ph)body+=`<p class="small" style="margin:0"><b>Payday lock:</b> the days after money comes in are hardest for “${esc(ph.name)}”. Move what you don't need first, before anything else.</p>`;
   openSheet({title:`+${$m(a)} added`,body,submit:'Got it',noFocus:true,noCancel:true,onSubmit:()=>{}});
 }
 function flowSheet(f,isNew){
@@ -3268,9 +3733,23 @@ document.addEventListener('click',e=>{
   if(act==='sweep-keep'){const o=sweepOffer(state);if(o){state.sweeps[o.w.a]='kept';commit()}return}
   if(act==='risk-ok'){const t=D.today();state.settings.dismissed=Object.fromEntries(Object.entries(state.settings.dismissed||{}).filter(([k,v])=>v>=t));
     state.settings.dismissed[id==='spend'?'riskspend:'+t:'risk:'+id+':'+t]=t;commit();return}
-  if(act==='hab'){const v=+a.dataset.v,cur=(state.habitLog[id]||{})[D.today()];setHabit(id,D.today(),cur===v?null:v);return}
-  if(act==='hab-all'){const t=D.today();for(const h of state.habits){const L=state.habitLog[h.id]=state.habitLog[h.id]||{};if(L[t]===undefined)L[t]=1}commit('Nice. Another clean day.');return}
-  if(act==='habday'){if(!habSel)return;const d=a.dataset.d,cur=(state.habitLog[habSel]||{})[d];setHabit(habSel,d,cur===undefined?1:cur===1?0:null);return}
+  if(act==='hab'){const t=D.today(),v=+a.dataset.v,cur=(state.habitLog[id]||{})[t],nv=cur===v?null:v;stampHabit(id,t,nv);setHabit(id,t,nv);
+    if(nv===0)toast(`Logged at ${fmtHM(nowHM())}. Tomorrow is day 1.`,()=>slipTimeSheet(id),'Change time');return}
+  if(act==='sliptime')return slipTimeSheet(id);
+  if(act==='mood'){const t=D.today();state.mood=state.mood||{};state.mood[t]={v:+a.dataset.v,t:nowHM()};commit(+a.dataset.v<=2?'Thanks for checking in. Go easy on yourself today.':'Thanks for checking in');return}
+  if(act==='mood-clear'){delete (state.mood||{})[D.today()];commit();return}
+  if(act==='urge')return urgeSheet();
+  if(act==='urge-kit')return urgeKitSheet();
+  if(act==='plan-add'){const v=a.dataset.v;if(!(state.plans||[]).some(p=>p.text===v))state.plans=(state.plans||[]).concat({id:uid(),habitId:id||null,text:v,src:'playbook',at:D.today()});commit('Added to your plans');return}
+  if(act==='plan-del'){const old=state.plans;state.plans=(state.plans||[]).filter(p=>p.id!==id);commit('Plan removed',()=>{state.plans=old;commit()});return}
+  if(act==='plan-new')return planSheet();
+  if(act==='rewards-edit')return rewardsSheet();
+  if(act==='paylock-ok'||act==='paylock-save'){const P=paydayInfo();if(!P)return;const t=D.today();state.paylock=Object.fromEntries(Object.entries(state.paylock||{}).filter(([d])=>d>=D.add(t,-30)));
+    if(act==='paylock-ok'){state.paylock[P.day]='ok';commit();return}
+    const v=+a.dataset.v||0;state.paylock[P.day]='moved';const lid=addLog({type:'save',amount:v,cashDelta:-v,savingsDelta:v,label:'Payday lock → savings'});
+    commit(`Moved ${$m0(v)} to savings. Locked away.`,()=>{undoLog(lid);delete state.paylock[P.day];commit('Undone')});return}
+  if(act==='hab-all'){const t=D.today();for(const h of state.habits){const L=state.habitLog[h.id]=state.habitLog[h.id]||{};if(L[t]===undefined){L[t]=1;stampHabit(h.id,t,1)}}commit('Nice. Another clean day.');return}
+  if(act==='habday'){if(!habSel)return;const d=a.dataset.d,cur=(state.habitLog[habSel]||{})[d];const nv=cur===undefined?1:cur===1?0:null;stampHabit(habSel,d,nv);setHabit(habSel,d,nv);return}
   if(act==='habsel'){habSel=a.value;render();return}
   if(act==='habmonth'){habMonth=a.dataset.m;render();return}
   if(act==='habits-edit')return habitsSheet();
