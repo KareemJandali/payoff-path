@@ -596,6 +596,19 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
 .chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin-top:6px}
 .chain span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 9px;font-size:12.5px;font-weight:600;color:var(--ink)}
 .chain i{font-style:normal;color:var(--ink-3);font-size:12px}
+/* live risk, experiments, auto-marked days */
+.live{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px}
+.live-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.live-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline}
+.live-r span{font-weight:600;font-size:14.5px}
+.live-r b{font-family:var(--mono);font-size:15px}
+.live-r small{grid-column:1/-1;font-size:12.5px;color:var(--ink-2)}
+.live-r.up b{color:var(--debt)}
+.exp-tonight{background:var(--surface-2);border-radius:12px;padding:10px 12px;display:grid;gap:2px}
+.exp-tonight.on{background:var(--invest-soft)}
+.exp-tonight b{font-size:15px}
+.exp-tonight small{font-size:12.5px;color:var(--ink-2)}
+.cd.auto{outline:2px dashed var(--ink-3);outline-offset:-4px}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
 .loading{display:grid;place-items:center;min-height:50vh;color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -1067,7 +1080,9 @@ function gauss(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*
 const mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
 function trackStart(){if(!EXP.length)return null;let f=EXP[0].date;for(let i=1;i<EXP.length;i++)if(D.diff(EXP[i-1].date,EXP[i].date)>14)f=EXP[i].date;return f}
 function incomeDaySet(S,from,to){const s=new Set();for(const f of S.flows)if(f.type==='income'&&!f.uncertain)for(const o of naturalOcc(f,from,to))if(o.amount>=200)s.add(o.date);
-  for(const e of S.log)if(e.type==='flow'&&e.cashDelta>=200&&e.date>=from&&e.date<=to)s.add(e.date);return s}
+  for(const e of S.log)if(e.type==='flow'&&e.cashDelta>=200&&e.date>=from&&e.date<=to)s.add(e.date);
+  if(typeof USEM!=='undefined')for(const M of Object.values(USEM))for(const [d,u] of Object.entries(M.days||{}))if(u.deposit&&d>=from&&d<=to&&(u.deposit.amount==null||u.deposit.amount>=200))s.add(d);
+  return s}
 const postIncome=(set,d)=>set.has(d)||set.has(D.add(d,-1))||set.has(D.add(d,-2));
 // one-sided permutation test: how often does shuffling the labels give a gap at least this big?
 function permP(a,b,obs,r,K=400){const all=a.concat(b),n=a.length;let c=0;for(let k=0;k<K;k++){for(let i=all.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[all[i],all[j]]=[all[j],all[i]]}
@@ -1107,7 +1122,7 @@ function habitLinks(S){
       const prev=d=>useMap.get(D.add(d,-1)),lab2=A.days.filter(d=>prev(d)),sl=lab2.filter(d=>A.L[d]===0),cl=lab2.filter(d=>A.L[d]===1);
       if(sl.length<3||cl.length<7)continue;const a=sl.map(d=>linkedMin(key,prev(d))),b=cl.map(d=>linkedMin(key,prev(d))),ma=mean(a),mb=mean(b);
       if(ma-mb<5||ma<mb*1.5)continue;const p=permP(a,b,ma-mb,rng(hash('use'+h.id)));if(p>=0.1)continue;
-      res.push({id:'uselink:'+h.id,kind:'usage',score:(ma-mb)*(1-p),text:`Slips on “${esc(h.name)}” tend to follow days with more ${key==='adult'?'adult-site browsing':key==='gambling'?'gambling-app use':key[0].toUpperCase()+key.slice(1)+' time'} (about ${Math.round(ma)} vs ${Math.round(mb)} min the day before).`})}
+      res.push({id:'uselink:'+h.id,kind:'usage',score:(ma-mb)*(1-p),text:`Slips on “${esc(h.name)}” tend to follow days with more ${isAdultKey(key)?'adult-site browsing':key==='gambling'?'gambling-app use':key[0].toUpperCase()+key.slice(1)+' time'} (about ${Math.round(ma)} vs ${Math.round(mb)} min the day before).`})}
     const ts=trackStart();if(ts){const ud=[...useMap.entries()].filter(([d,u])=>d>=ts&&d<t&&u.total>0);
       if(ud.length>=14){const md=median(ud.map(([,u])=>u.total)),hi=ud.filter(([,u])=>u.total>md).map(([d])=>tot.get(d)||0),lo=ud.filter(([,u])=>u.total<=md).map(([d])=>tot.get(d)||0),mh=mean(hi),ml=mean(lo);
         if(hi.length>=5&&lo.length>=5&&mh-ml>=5&&mh>=ml*1.4){const p=permP(hi,lo,mh-ml,rng(hash('screen-spend')));if(p<0.1)res.push({id:'screenspend',kind:'usage',score:(mh-ml)*3*(1-p),text:`On days with more screen time (over ${Math.round(md)} min), you spend more: ${$m0(mh)} a day vs ${$m0(ml)}.`})}}}
@@ -1174,7 +1189,7 @@ function streakOdds(h){
 }
 /* 2) personal slip predictor: logistic regression on your own check-ins (ridge-regularized), checked on your most
    recent 25% of days against simply using your average slip rate. Only used when it actually predicts better. */
-const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks','more time on the related app or sites the day before','more screen time the day before','short sleep the night before','a low mood'];
+const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks','more time on the related app or sites the day before','more screen time the day before','short sleep the night before','a low mood','a low-step day before','a workout the day before','a stressful day before (low heart-rate variability)'];
 const sigm=z=>1/(1+Math.exp(-z));
 function slipFeatures(h,d,ctx,future){
   const L=ctx.logs[h.id]||{},y=D.add(d,-1),w=dow(d),f=[1];for(let i=0;i<7;i++)f.push(w===i?1:0);
@@ -1192,16 +1207,20 @@ function slipFeatures(h,d,ctx,future){
   // sleep the night before (iPhone Sleep automation, or estimated from first and last phone use) and mood
   const sl=!future&&ctx.usage?sleepFor(d,ctx.usage):null;f.push(sl?Math.max(0,Math.min(1.5,(7-sl.hours)/2)):0);
   const MD=state.mood||{},md=future?null:(MD[d]&&(MD[d].t||'')<'15:00'?MD[d]:MD[y]);f.push(md&&md.v<=2?1:0);
+  // Apple Health the day before (steps, workouts, heart-rate variability), from the daily Health automation
+  const hy=uy&&uy.health?uy.health:null;f.push(hy&&hy.steps!=null&&+hy.steps<4000?1:0);f.push(hy&&+hy.workout>=20?1:0);f.push(hy&&+hy.hrv>0&&ctx.hrvMed&&+hy.hrv<0.8*ctx.hrvMed?1:0);
   return f;
 }
-// ridge logistic regression fitted exactly with Newton's method (a few steps, tiny matrix)
-function trainLogit(X,Y,lambda){
-  const m=X[0].length,w=new Array(m).fill(0),p0=(Y.reduce((a,b)=>a+b,0)+1)/(Y.length+2);w[0]=Math.log(p0/(1-p0));
+// ridge logistic regression fitted exactly with Newton's method (a few steps, tiny matrix).
+// W: row weights (recent days count more). prior: weights to shrink toward instead of zero (the model pooled across your habits).
+function trainLogit(X,Y,lambda,prior,W){
+  const m=X[0].length,w=new Array(m).fill(0);let sy=0,sw=0;for(let i=0;i<Y.length;i++){const wi=W?W[i]:1;sy+=wi*Y[i];sw+=wi}
+  const p0=(sy+1)/(sw+2);w[0]=Math.log(p0/(1-p0));if(prior)for(let j=1;j<m;j++)w[j]=prior[j]||0;
   for(let it=0;it<15;it++){
     const H=Array.from({length:m},()=>new Array(m).fill(0)),g=new Array(m).fill(0);
-    for(let i=0;i<X.length;i++){const x=X[i];let z=0;for(let j=0;j<m;j++)z+=x[j]*w[j];const p=sigm(z),s=Math.max(1e-6,p*(1-p)),e=p-Y[i];
+    for(let i=0;i<X.length;i++){const x=X[i],wi=W?W[i]:1;let z=0;for(let j=0;j<m;j++)z+=x[j]*w[j];const p=sigm(z),s=Math.max(1e-6,p*(1-p))*wi,e=(p-Y[i])*wi;
       for(let j=0;j<m;j++){if(!x[j])continue;g[j]+=e*x[j];for(let k=0;k<=j;k++)if(x[k])H[j][k]+=s*x[j]*x[k]}}
-    for(let j=0;j<m;j++){for(let k=j+1;k<m;k++)H[j][k]=H[k][j];if(j){g[j]+=lambda*w[j];H[j][j]+=lambda}else H[0][0]+=1e-6}
+    for(let j=0;j<m;j++){for(let k=j+1;k<m;k++)H[j][k]=H[k][j];if(j){g[j]+=lambda*(w[j]-(prior?prior[j]||0:0));H[j][j]+=lambda}else H[0][0]+=1e-6}
     // solve H·d = g (Gaussian elimination with partial pivoting)
     const A=H.map((r,i)=>r.concat(g[i]));
     for(let c=0;c<m;c++){let p=c;for(let r=c+1;r<m;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];const v=A[c][c]||1e-9;
@@ -1211,27 +1230,56 @@ function trainLogit(X,Y,lambda){
   }
   return w;
 }
-function slipModel(h,ctx){
+// uncertainty of the fitted weights (inverse of the curvature at the fit), used for the "likely" ranges
+function logitCov(X,w,lambda,W){
+  const m=w.length,H=Array.from({length:m},()=>new Array(m).fill(0));
+  for(let i=0;i<X.length;i++){const x=X[i],wi=W?W[i]:1;let z=0;for(let j=0;j<m;j++)z+=x[j]*w[j];const p=sigm(z),s=Math.max(1e-6,p*(1-p))*wi;
+    for(let j=0;j<m;j++){if(!x[j])continue;for(let k=0;k<m;k++)if(x[k])H[j][k]+=s*x[j]*x[k]}}
+  for(let j=1;j<m;j++)H[j][j]+=lambda;H[0][0]+=1e-6;
+  const A=H.map((r,i)=>r.concat(Array.from({length:m},(_,k)=>k===i?1:0)));
+  for(let c=0;c<m;c++){let p=c;for(let r=c+1;r<m;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];const v=A[c][c]||1e-9;
+    for(let k=0;k<2*m;k++)A[c][k]/=v;for(let r=0;r<m;r++){if(r===c)continue;const f=A[r][c];if(f)for(let k=0;k<2*m;k++)A[r][k]-=f*A[c][k]}}
+  return A.map(r=>r.slice(m));
+}
+const dotp=(x,w)=>{let z=0;for(let j=0;j<x.length;j++)z+=x[j]*w[j];return z};
+const RECENT_HALF=75; // a day 75 days ago counts half as much as yesterday
+function slipPrep(h,ctx,relaxed){
   const L=ctx.logs[h.id]||{},days=Object.keys(L).filter(d=>d<ctx.t&&d>=D.add(ctx.t,-240)).sort(),slips=days.filter(d=>L[d]===0).length;
-  if(days.length<30||slips<4)return null;
-  const X=days.map(d=>slipFeatures(h,d,ctx)),Y=days.map(d=>L[d]===0?1:0),cut=Math.floor(days.length*0.75);
-  const wt=trainLogit(X.slice(0,cut),Y.slice(0,cut),1.5),pb=(Y.slice(0,cut).reduce((a,b)=>a+b,0)+1)/(cut+2);
-  let bm=0,bb=0;for(let i=cut;i<X.length;i++){let z=0;for(let j=0;j<wt.length;j++)z+=X[i][j]*wt[j];bm+=(sigm(z)-Y[i])**2;bb+=(pb-Y[i])**2}
+  // needs both kinds of days: a habit with only slips filled in (say, from old browsing history) can't be learned yet
+  if(days.length-slips<10||(relaxed?(days.length<25||slips<3):(days.length<30||slips<4)))return null;
+  const X=days.map(d=>slipFeatures(h,d,ctx)),Y=days.map(d=>L[d]===0?1:0),cut=Math.floor(days.length*0.75),W=days.map(d=>Math.pow(0.5,D.diff(d,ctx.t)/RECENT_HALF));
+  return {L,days,slips,X,Y,cut,W};
+}
+function slipFit(h,ctx,P,priorPre,priorAll){
+  const {L,days,slips,X,Y,cut,W}=P;
+  const wt=trainLogit(X.slice(0,cut),Y.slice(0,cut),1.5,priorPre,W.slice(0,cut)),pb=(Y.slice(0,cut).reduce((a,b)=>a+b,0)+1)/(cut+2);
+  let bm=0,bb=0;for(let i=cut;i<X.length;i++){bm+=(sigm(dotp(X[i],wt))-Y[i])**2;bb+=(pb-Y[i])**2}
   let comb=null;try{comb=combineModel(h,ctx,L,days,X,Y,cut,wt,pb)}catch(e){console.error(e)}
-  return {w:trainLogit(X,Y,1.5),skill:bb>0?1-bm/bb:0,base:(slips+1)/(days.length+2),n:days.length,slips,comb,test:X.length-cut};
+  const w=trainLogit(X,Y,1.5,priorAll,W),base=(slips+1)/(days.length+2);let cov=null;try{cov=logitCov(X,w,1.5,W)}catch(e){}
+  return {w,cov,skill:bb>0?1-bm/bb:0,base,n:days.length,slips,comb,test:X.length-cut,pooled:!!priorAll,hz:hazArray(streakRuns(L),base),rule:ruleStats(L,days,ctx.inc)};
 }
 let slipCache=null;
 function slipModels(){
-  const k=state.rev+'|'+(typeof expRev!=='undefined'?expRev:0)+'|'+D.today();if(slipCache&&slipCache.k===k)return slipCache;
+  const k=state.rev+'|'+(typeof expRev!=='undefined'?expRev:0)+'|'+(typeof useRev!=='undefined'?useRev:0)+'|'+D.today();if(slipCache&&slipCache.k===k)return slipCache;
   const t=D.today(),spend=new Map();for(const e of EXP)spend.set(e.date,(spend.get(e.date)||0)+(+e.amount||0));
   const usage=new Map();if(typeof USEM!=='undefined')for(const M of Object.values(USEM))for(const [d,u] of Object.entries(M.days||{}))usage.set(d,u);
-  const ctx={t,habits:state.habits||[],logs:state.habitLog||{},inc:incomeDaySet(state,D.add(t,-260),D.add(t,120)),spend,ts:trackStart(),usage},m={};
-  for(const h of ctx.habits){try{m[h.id]=slipModel(h,ctx)}catch(e){m[h.id]=null}}
+  const hrvs=[...usage.values()].map(u=>u.health&&+u.health.hrv).filter(x=>x>0);
+  const ctx={t,habits:state.habits||[],logs:state.habitLog||{},inc:incomeDaySet(state,D.add(t,-260),D.add(t,120)),spend,ts:trackStart(),usage,hrvMed:hrvs.length>=7?median(hrvs):null},m={};
+  // habits learn from each other: a model fitted on all habits together is the starting point each habit's own model is pulled toward
+  const P={};for(const h of ctx.habits){try{P[h.id]=slipPrep(h,ctx,true)}catch(e){P[h.id]=null}}
+  const ok=Object.values(P).filter(Boolean);let pre=null,all=null;
+  if(ok.length>=2){try{const Xa=[],Ya=[],Wa=[],Xp=[],Yp=[],Wp=[];
+    for(const q of ok)q.X.forEach((x,i)=>{Xa.push(x);Ya.push(q.Y[i]);Wa.push(q.W[i]);if(i<q.cut){Xp.push(x);Yp.push(q.Y[i]);Wp.push(q.W[i])}});
+    pre=trainLogit(Xp,Yp,3,null,Wp);all=trainLogit(Xa,Ya,3,null,Wa)}catch(e){pre=all=null}}
+  for(const h of ctx.habits){const q=P[h.id];
+    // a habit with only a little history is allowed in only when the pooled model can steady it
+    if(!q||(!all&&(q.days.length<30||q.slips<4))){m[h.id]=null;continue}
+    try{m[h.id]=slipFit(h,ctx,q,pre,all)}catch(e){console.error(e);m[h.id]=null}}
   return slipCache={k,ctx,m};
 }
 function slipRisk(h,d,futureStreak){
   const {ctx,m}=slipModels(),M=m[h.id];if(!M||M.skill<=0.01)return null;
-  const f=slipFeatures(h,d,ctx,futureStreak!=null?{streak:futureStreak}:null);let z=0;f.forEach((x,j)=>z+=x*M.w[j]);
+  const f=slipFeatures(h,d,ctx,futureStreak!=null?{streak:futureStreak}:null),z=dotp(f,M.w);
   const why=[];f.forEach((x,j)=>{if(!j||!x)return;const c=M.w[j]*x;if(c>0.2)why.push([c,FEAT[j]])});why.sort((a,b)=>b[0]-a[0]);
   return {p:sigm(z),base:M.base,skill:M.skill,why:why.slice(0,3).map(x=>x[1])};
 }
@@ -1331,39 +1379,173 @@ function dangerWindow(h){
 }
 /* 3) the combined risk score: survival odds, the personal predictor and the weekday/payday rule, weighted by how well
    each did on your most recent days, then calibrated so its percentages match what really happened */
-function hazArray(runs,r,k=3,max=200){const a=new Array(max+2).fill(r);for(let day=1;day<=max;day++){let n=0,d=0;for(const x of runs){if(x.event){if(x.len>=day-1)n++;if(x.len===day-1)d++}else if(x.len>=day)n++}a[day]=(d+k*r)/(n+k)}return a}
+function hazArray(runs,r,k=3,max=200){const a=new Array(max+2).fill(r),N=new Array(max+2).fill(0);for(let day=1;day<=max;day++){let n=0,d=0;for(const x of runs){if(x.event){if(x.len>=day-1)n++;if(x.len===day-1)d++}else if(x.len>=day)n++}a[day]=(d+k*r)/(n+k);N[day]=n}a.n=N;return a}
 function streakAt(L,d){let st=0,x=D.add(d,-1);while(L[x]===1&&st<400){st++;x=D.add(x,-1)}return st}
-function ruleStats(L,days,inc){const r=(days.filter(d=>L[d]===0).length+1)/(days.length+2),k=4,wd=[];
-  for(let w=0;w<7;w++){const ds=days.filter(d=>dow(d)===w),s=ds.filter(d=>L[d]===0).length;wd.push((s+k*r)/(ds.length+k))}
-  const pd=days.filter(d=>postIncome(inc,d)),ps=pd.filter(d=>L[d]===0).length;return {r,wd,post:(ps+k*r)/(pd.length+k)}}
+function ruleStats(L,days,inc){const r=(days.filter(d=>L[d]===0).length+1)/(days.length+2),k=4,wd=[],n=[];
+  for(let w=0;w<7;w++){const ds=days.filter(d=>dow(d)===w),s=ds.filter(d=>L[d]===0).length;wd.push((s+k*r)/(ds.length+k));n.push(ds.length)}
+  const pd=days.filter(d=>postIncome(inc,d)),ps=pd.filter(d=>L[d]===0).length;return {r,wd,n,post:(ps+k*r)/(pd.length+k)}}
 function ruleP(R,d,inc){const o=p=>p/(1-p);let z=o(R.wd[dow(d)]);if(postIncome(inc,d))z*=o(R.post)/o(R.r);return z/(1+z)}
 const logit=p=>{const q=Math.max(1e-4,Math.min(1-1e-4,p));return Math.log(q/(1-q))};
 function combineModel(h,ctx,L,days,X,Y,cut,wt,pb){
   const cutDate=days[cut],Lpre=Object.fromEntries(Object.entries(L).filter(([d])=>d<cutDate)),hzPre=hazArray(streakRuns(Lpre),pb),RPre=ruleStats(L,days.slice(0,cut),ctx.inc);
   const comps=[[],[],[]],ys=[];
-  for(let i=cut;i<X.length;i++){let z=0;for(let j=0;j<wt.length;j++)z+=X[i][j]*wt[j];comps[0].push(sigm(z));comps[1].push(hzPre[Math.min(200,streakAt(L,days[i])+1)]);comps[2].push(ruleP(RPre,days[i],ctx.inc));ys.push(Y[i])}
+  for(let i=cut;i<X.length;i++){comps[0].push(sigm(dotp(X[i],wt)));comps[1].push(hzPre[Math.min(200,streakAt(L,days[i])+1)]);comps[2].push(ruleP(RPre,days[i],ctx.inc));ys.push(Y[i])}
   const brier=ps=>ps.reduce((s,p,i)=>s+(p-ys[i])**2,0),bb=ys.reduce((s,y)=>s+(pb-y)**2,0);if(!(bb>0))return null;
   const w=comps.map(c=>Math.max(0,1-brier(c)/bb));if(!w.some(x=>x>0.01))return null;const W=w.reduce((a,b)=>a+b,0);
   const zs=ys.map((_,i)=>comps.reduce((s,c,k)=>s+w[k]*logit(c[i]),0)/W);let a=1,b=0;
   if(ys.length>=20&&ys.filter(Boolean).length>=3){const ab=trainLogit(zs.map(z=>[1,z]),ys,0.5);b=ab[0];a=Math.max(0.2,ab[1])}
   const pc=zs.map(z=>sigm(b+a*z)),bins=[[0,0.15],[0.15,0.35],[0.35,1.01]].map(([lo,hi])=>{const ix=pc.map((p,i)=>i).filter(i=>pc[i]>=lo&&pc[i]<hi);return ix.length>=3?{pred:mean(ix.map(i=>pc[i])),act:mean(ix.map(i=>ys[i])),n:ix.length}:null}).filter(Boolean);
-  const base=(Y.filter(Boolean).length+1)/(Y.length+2);
-  return {w,a,b,skill:1-brier(pc)/bb,bins,hz:hazArray(streakRuns(L),base),rule:ruleStats(L,days,ctx.inc)};
+  return {w,a,b,skill:1-brier(pc)/bb,bins};
+}
+/* every method's answer for one day, each with its uncertainty (on the log-odds scale) */
+function riskParts(h,d,futureStreak){
+  const {ctx,m}=slipModels(),M=m[h.id];if(!M)return null;
+  const f=slipFeatures(h,d,ctx,futureStreak!=null?{streak:futureStreak}:null),z=dotp(f,M.w);
+  let se1=0.6;if(M.cov){let v=0;for(let i=0;i<f.length;i++)if(f[i])for(let j=0;j<f.length;j++)if(f[j])v+=f[i]*M.cov[i][j]*f[j];se1=Math.sqrt(Math.max(0,v))}
+  const why=[];f.forEach((x,j)=>{if(!j||!x)return;const c=M.w[j]*x;if(c>0.2)why.push([c,FEAT[j]])});why.sort((a,b)=>b[0]-a[0]);
+  const L=ctx.logs[h.id]||{},st=futureStreak!=null?futureStreak+Math.max(0,D.diff(ctx.t,d)):streakAt(L,d),k=Math.min(200,st+1);
+  const pz=M.hz[k],nz=(M.hz.n||[])[k]||0,pr=ruleP(M.rule,d,ctx.inc),nr=(M.rule.n||[])[dow(d)]||0;
+  const sez=Math.sqrt(1/(pz*(1-pz)*(nz+3))),ser=Math.sqrt(1/(pr*(1-pr)*(nr+4))),seb=Math.sqrt(1/(M.base*(1-M.base)*(M.n+2)));
+  const out={m:sigm(z),z:pz,r:pr,b:M.base,se:{m:se1,z:sez,r:ser,b:seb},why:why.slice(0,3).map(x=>x[1])};
+  const C=M.comb;if(C&&C.skill>0.01){const W=C.w.reduce((a,b)=>a+b,0);
+    out.c=sigm(C.b+C.a*(C.w[0]*logit(out.m)+C.w[1]*logit(out.z)+C.w[2]*logit(out.r))/W);
+    out.se.c=C.a*Math.sqrt((C.w[0]/W*se1)**2+(C.w[1]/W*sez)**2+(C.w[2]/W*ser)**2)}
+  return out;
+}
+const METHOD={c:'combined forecast',m:'personal predictor',z:'streak odds',r:'weekday and payday rule',b:'your average'};
+function defaultMethod(M){return M.comb&&M.comb.skill>0.01?'c':M.skill>0.01?'m':null}
+/* the method actually used: whichever has the best real track record (replayed days + live prediction log), once there are 20+ scored days */
+function chosenMethod(h){
+  const M=slipModels().m[h.id];if(!M)return null;const S=ledgerScore(h);
+  if(S&&S.n>=20&&S.best)return S.best==='b'?null:S.best;return defaultMethod(M);
 }
 function combinedRisk(h,d,futureStreak){
-  const {ctx,m}=slipModels(),M=m[h.id];if(!M)return null;
-  const f=slipFeatures(h,d,ctx,futureStreak!=null?{streak:futureStreak}:null);let z=0;f.forEach((x,j)=>z+=x*M.w[j]);const p1=sigm(z),C=M.comb;
-  const why=[];f.forEach((x,j)=>{if(!j||!x)return;const c=M.w[j]*x;if(c>0.2)why.push([c,FEAT[j]])});why.sort((a,b)=>b[0]-a[0]);const W3=why.slice(0,3).map(x=>x[1]);
-  if(!C||C.skill<=0.01)return M.skill>0.01?{p:p1,base:M.base,src:'model',skill:M.skill,why:W3}:null;
-  const L=ctx.logs[h.id]||{},st=futureStreak!=null?futureStreak+Math.max(0,D.diff(ctx.t,d)):streakAt(L,d),p2=C.hz[Math.min(200,st+1)],p3=ruleP(C.rule,d,ctx.inc),W=C.w.reduce((a,b)=>a+b,0);
-  return {p:sigm(C.b+C.a*(C.w[0]*logit(p1)+C.w[1]*logit(p2)+C.w[2]*logit(p3))/W),base:M.base,src:'combined',skill:C.skill,why:W3};
+  const R=riskParts(h,d,futureStreak);if(!R)return null;let k=chosenMethod(h);if(k&&R[k]==null){const M=slipModels().m[h.id];k=defaultMethod(M)}
+  if(!k||R[k]==null)return null;const p=R[k],zz=logit(p),se=R.se[k]||0.6;
+  return {p,base:R.b,src:k,lo:sigm(zz-1.2816*se),hi:sigm(zz+1.2816*se),why:R.why,parts:R};
 }
+const rangeTxt=r=>r&&r.lo!=null?`likely ${Math.round(r.lo*100)}–${Math.round(r.hi*100)}%`:'';
 /* 4) the next 7 days, assuming the streak keeps going */
 function forecast7(h){
   const t=D.today(),L=(state.habitLog||{})[h.id]||{},s=habitStats(h),from=L[t]!==undefined?1:0,out=[];
   // if today is already logged, its clean day is part of the streak, so tomorrow starts one day later
-  for(let i=from;i<from+7;i++){const d=D.add(t,i),r=combinedRisk(h,d,d===t?null:Math.max(0,s.streak-from));if(!r)return null;out.push({d,p:r.p,base:r.base})}
+  for(let i=from;i<from+7;i++){const d=D.add(t,i),r=combinedRisk(h,d,d===t?null:Math.max(0,s.streak-from));if(!r)return null;out.push({d,p:r.p,base:r.base,lo:r.lo,hi:r.hi})}
   return out;
+}
+/* ---------- prediction log: what the app said before each day happened, scored against what really happened ---------- */
+const r3=x=>x==null?null:Math.round(x*1000)/1000;
+function recordPredictions(){
+  if(!state||readOnly)return false;const t=D.today();let changed=false;const PL=state.predlog=state.predlog||{};
+  for(const h of state.habits||[]){const L=state.habitLog[h.id]||{},s=habitStats(h),from=L[t]!==undefined?1:0,lg=PL[h.id]=PL[h.id]||{};
+    for(let i=from;i<7;i++){const d=D.add(t,i);let R,c;try{R=riskParts(h,d,d===t?null:Math.max(0,s.streak-from));c=combinedRisk(h,d,d===t?null:Math.max(0,s.streak-from))}catch(e){R=null}
+      if(!R)continue;const e={p:c?r3(c.p):null,c:r3(R.c),m:r3(R.m),z:r3(R.z),r:r3(R.r),b:r3(R.b),on:t};
+      const o=lg[d];if(!o||Math.abs((o.p||0)-(e.p||0))>0.005||Math.abs((o.c||0)-(e.c||0))>0.005||Math.abs((o.m||0)-(e.m||0))>0.005){lg[d]=e;changed=true}}
+    for(const d of Object.keys(lg))if(d<D.add(t,-200)){delete lg[d];changed=true}}
+  return changed;
+}
+/* replay: for each of your last 45 logged days, retrain on the days before it only, predict, then compare */
+const btRes={};
+function* backtestJob(h){
+  const {ctx}=slipModels(),P=slipPrep(h,ctx,false);if(!P)return [];const {L,days,X,Y,W}=P,rows=[],n=days.length;
+  for(let i=Math.max(30,n-45);i<n;i++){
+    const Xi=X.slice(0,i),Yi=Y.slice(0,i),sl=Yi.reduce((a,b)=>a+b,0);if(sl<4)continue;
+    const cut=Math.floor(i*0.75),wt=trainLogit(Xi.slice(0,cut),Yi.slice(0,cut),1.5,null,W.slice(0,cut)),pb=(Yi.slice(0,cut).reduce((a,b)=>a+b,0)+1)/(cut+2);
+    const w=trainLogit(Xi,Yi,1.5,null,W.slice(0,i)),base=(sl+1)/(i+2),Lpre=Object.fromEntries(days.slice(0,i).map(d=>[d,L[d]]));
+    const hz=hazArray(streakRuns(Lpre),base),rule=ruleStats(Lpre,days.slice(0,i),ctx.inc);
+    const pm=sigm(dotp(X[i],w)),pz=hz[Math.min(200,streakAt(L,days[i])+1)],pr=ruleP(rule,days[i],ctx.inc);let pc=null;
+    try{const C=combineModel(h,ctx,Lpre,days.slice(0,i),Xi,Yi,cut,wt,pb);if(C&&C.skill>0.01){const Wt=C.w.reduce((a,b)=>a+b,0);pc=sigm(C.b+C.a*(C.w[0]*logit(pm)+C.w[1]*logit(pz)+C.w[2]*logit(pr))/Wt)}}catch(e){}
+    rows.push({d:days[i],y:Y[i],e:{c:pc,m:pm,z:pz,r:pr,b:base}});yield;
+  }
+  return rows;
+}
+function backtest(h){
+  const L=state.habitLog[h.id]||{},k=D.today()+'|'+Object.keys(L).length+'|'+Object.values(L).filter(v=>v===0).length+'|'+(typeof useRev!=='undefined'?useRev:0);
+  const r=btRes[h.id];if(r&&r.k===k)return r.rows;
+  bgRun('bt:'+h.id+':'+k,()=>backtestJob(h),rows=>{btRes[h.id]={k,rows};memoStore['ledger:'+h.id]=null;slipCache=null;if(tab==='habits'||tab==='today')render()});
+  return r?r.rows:null;
+}
+function ledgerScore(h){return memo('ledger:'+h.id,()=>{
+  const LG=(state.predlog||{})[h.id]||{},L=(state.habitLog||{})[h.id]||{},t=D.today(),byD=new Map();
+  for(const r of backtest(h)||[])byD.set(r.d,{...r,src:'replay'});
+  for(const [d,e] of Object.entries(LG))if(d<t&&L[d]!==undefined)byD.set(d,{d,y:L[d]===0?1:0,e,src:'live'});
+  const rows=[...byD.values()];if(!rows.length)return {n:0,live:0,replay:0};
+  const res={};for(const k of ['c','m','z','r']){const rs=rows.filter(r=>r.e[k]!=null&&r.e.b!=null);if(rs.length<10)continue;
+    const bk=mean(rs.map(r=>(r.e[k]-r.y)**2)),bb=mean(rs.map(r=>(r.e.b-r.y)**2));res[k]={n:rs.length,brier:bk,skill:bb>0?1-bk/bb:0}}
+  let best='b',bs=0.01;for(const k in res)if(res[k].n>=20&&res[k].skill>bs){bs=res[k].skill;best=k}
+  const live=rows.filter(r=>r.src==='live'&&r.e.p!=null),bins=[[0,0.15],[0.15,0.35],[0.35,1.01]].map(([lo,hi])=>{const xs=live.filter(r=>r.e.p>=lo&&r.e.p<hi);return xs.length>=3?{pred:mean(xs.map(r=>r.e.p)),act:mean(xs.map(r=>r.y)),n:xs.length}:null}).filter(Boolean);
+  return {n:rows.length,live:rows.filter(r=>r.src==='live').length,replay:rows.filter(r=>r.src==='replay').length,res,best,bins,
+    since:rows.filter(r=>r.src==='live').map(r=>r.d).sort()[0]||null};
+})}
+/* ---------- live risk: the next 3 hours, updated with what has happened so far today ---------- */
+const LIVE_FEAT=['base','the time of day','opens tonight','a purchase earlier today','a low mood','payday','another slip earlier today','an urge earlier today'];
+function hourShares(h){const {w}=hourHist(h),tot=w.reduce((a,b)=>a+b,0);return w.map(v=>(v+0.25)/(tot+6))}
+function liveFeats(h,d,hr,ctx,sh,U,opt){
+  const u=U.get(d)||{},key=habitKey(h),cut=pad(hr)+':00',before=x=>!!x&&x<cut;
+  const win=sh[hr%24]+sh[(hr+1)%24]+sh[(hr+2)%24];
+  let opens=0;if(key&&!isAdultKey(key))for(const [app,ts] of Object.entries(u.opens||{}))if(key==='gambling'?GAMBLE_RE.test(app):plain(app).includes(key))opens+=ts.filter(x=>x>='17:00'&&before(x)).length;
+  if(opt&&opt.opens!=null)opens=opt.opens;
+  const buy=EXP.some(e=>e.date===d&&e.src==='applepay'&&!(CAT[e.cat]||{}).ess&&before(pad(new Date(e.ts).getHours())+':'+pad(new Date(e.ts).getMinutes())))?1:0;
+  const md=(state.mood||{})[d],low=md&&md.v<=2&&before(md.t)?1:0;
+  let other=0;for(const hh of ctx.habits)if(hh.id!==h.id&&before(((state.slipTimes||{})[hh.id]||{})[d]))other=1;
+  const urge=(state.urges||[]).some(x=>x.date===d&&before(x.time))?1:0;
+  return [1,Math.log(win*8),Math.log1p(opens),buy,low,postIncome(ctx.inc,d)?1:0,other,urge];
+}
+function liveModel(h){return memo('live:'+h.id,()=>{
+  const {ctx}=slipModels(),L=ctx.logs[h.id]||{},ST=(state.slipTimes||{})[h.id]||{},t=D.today(),U=useMapAll(),sh=hourShares(h);
+  const days=Object.keys(L).filter(d=>d<t&&d>=D.add(t,-180)&&(L[d]===1||ST[d])).sort(),timed=days.filter(d=>L[d]===0).length;
+  if(!slipModels().m[h.id])return null;
+  if(timed<6||days.length<30)return {sh,ready:false,timed};
+  const X=[],Y=[],W=[],DI=[];
+  for(const d of days){const st=L[d]===0?tmin(ST[d]):null,wt=Math.pow(0.5,D.diff(d,t)/RECENT_HALF);
+    for(let hr=0;hr<24;hr++){const a=hr*60;if(st!=null&&st<a)break;X.push(liveFeats(h,d,hr,ctx,sh,U));Y.push(st!=null&&st>=a&&st<a+180?1:0);W.push(wt);DI.push(d)}}
+  const cutD=days[Math.floor(days.length*0.75)],tr=[],te=[];DI.forEach((d,i)=>(d<cutD?tr:te).push(i));
+  const fit=(idx,f)=>trainLogit(idx.map(i=>f(X[i])),idx.map(i=>Y[i]),2,null,idx.map(i=>W[i])),full=x=>x,basic=x=>[x[0],x[1]];
+  const wF=fit(tr,full),wB=fit(tr,basic);let bF=0,bB=0;for(const i of te){bF+=(sigm(dotp(X[i],wF))-Y[i])**2;bB+=(sigm(dotp(basic(X[i]),wB))-Y[i])**2}
+  return {sh,ready:true,timed,n:days.length,skill:bB>0?1-bF/bB:0,w:fit(tr.concat(te),full)};
+})}
+function liveRisk(h,hrOverride){
+  const t=D.today();if((state.habitLog[h.id]||{})[t]!==undefined)return null;const LM=liveModel(h);if(!LM)return null;
+  const hr=hrOverride!=null?hrOverride:new Date().getHours(),{ctx}=slipModels(),U=useMapAll(),key=habitKey(h);
+  if(LM.ready&&LM.skill>0.01){const x=liveFeats(h,t,hr,ctx,LM.sh,U),p=sigm(dotp(x,LM.w)),usual=sigm(dotp([x[0],x[1],0,0,0,0,0,0],LM.w));
+    const why=[];x.forEach((v,j)=>{if(j<2||!v)return;if(v*LM.w[j]>0.2)why.push(j===2?`${key==='gambling'?'gambling-app':key?key[0].toUpperCase()+key.slice(1):'app'} opens tonight`:LIVE_FEAT[j])});
+    return {p,usual,src:'live',why,skill:LM.skill}}
+  // not enough timed slips yet: today's risk spread over the hours when your slips usually happen
+  const daily=combinedRisk(h,t),pd=daily?daily.p:((slipModels().m[h.id]||{}).base);if(pd==null)return null;
+  const sh=LM.sh,rem=sh.slice(hr).reduce((a,b)=>a+b,0),win=sh.slice(hr,hr+3).reduce((a,b)=>a+b,0);
+  const p=Math.min(0.95,pd*win/Math.max(0.05,1-pd*(1-rem)));return {p,usual:p,src:'spread',why:[]};
+}
+/* lookup table for the evening Claude task: next-3-hour risk by hour and by how many times the related app was opened tonight */
+function liveTable(h){
+  const LM=liveModel(h);if(!LM)return null;const t=D.today(),{ctx}=slipModels(),U=useMapAll(),counts=[0,1,2,3,5],hours=[17,18,19,20,21,22,23,0,1],out={};
+  for(const hr of hours){if(LM.ready&&LM.skill>0.01)out[hr]=counts.map(c=>Math.round(sigm(dotp(liveFeats(h,t,hr,ctx,LM.sh,U,{opens:c}),LM.w))*100));
+    else{const r=liveRisk(h,hr);out[hr]=counts.map(()=>r?Math.round(r.p*100):null)}}
+  return {counts,by_hour:out,uses_opens:!!(LM.ready&&LM.skill>0.01)};
+}
+/* ---------- personal experiments: random nights on and off, so the result is cause and effect, not coincidence ---------- */
+const EXP_T=[
+  {id:'phone',text:'Phone charges outside the bedroom from 10 PM',off:'Phone wherever you like'},
+  {id:'igcut',text:'No Instagram after 9 PM',off:'Instagram as usual'},
+  {id:'walk',text:'A 20-minute walk in the evening',off:'No planned walk'},
+  {id:'bed',text:'In bed, phone down, by midnight',off:'Go to bed whenever'},
+  {id:'block',text:'Gambling apps and sites blocked for the day',off:'No extra blocking'}];
+function randBits(n){const a=new Uint32Array(n);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<n;i++)a[i]=Math.floor(Math.random()*4294967296)}return a}
+function newExperiment(habitId,text,off,len){
+  const t=D.today(),days=[];for(let i=0;i<len;i++)days.push(D.add(t,i));
+  // balanced: exactly half the nights "on", in random order (Fisher-Yates)
+  const on=days.map((_,i)=>i<Math.floor(len/2)?1:0),r=randBits(len);for(let i=len-1;i>0;i--){const j=r[i]%(i+1);[on[i],on[j]]=[on[j],on[i]]}
+  return {id:uid(),habitId,text,off,start:t,end:days[len-1],nights:Object.fromEntries(days.map((d,i)=>[d,on[i]])),done:{},status:'active'};
+}
+function activeExperiment(){const t=D.today();return (state.experiments||[]).find(x=>x.status==='active'&&x.start<=t&&x.end>=t)||null}
+function expResult(x){
+  const L=(state.habitLog||{})[x.habitId]||{},t=D.today(),onD=[],offD=[];
+  for(const [d,v] of Object.entries(x.nights))if(d<=t&&L[d]!==undefined)(v?onD:offD).push(d);
+  const k1=onD.filter(d=>L[d]===0).length,n1=onD.length,k0=offD.filter(d=>L[d]===0).length,n0=offD.length;
+  // Bayesian comparison: chance the "on" nights really have a lower slip rate than the "off" nights
+  const r=rng(hash(x.id)),gam=k=>{let s=0;for(let i=0;i<k;i++)s-=Math.log(r()||1e-12);return s}; // integer-shape gamma (sum of exponentials)
+  let win=0;const N=3000;for(let i=0;i<N;i++){const a1=gam(1+k1),b1=gam(1+n1-k1),a0=gam(1+k0),b0=gam(1+n0-k0);if(a1/(a1+b1)<a0/(a0+b0))win++}
+  const did=onD.filter(d=>x.done[d]===true),skipped=onD.filter(d=>x.done[d]===false);
+  return {n1,k1,n0,k0,r1:n1?k1/n1:null,r0:n0?k0/n0:null,pBetter:win/N,did:did.length,skipped:skipped.length,
+    verdict:n1<4||n0<4?'early':win/N>=0.9?'works':win/N<=0.1?'worse':'unclear'};
 }
 /* 2) trigger chains: A on one day makes B more likely the same or next day, and B leads on to C */
 function triggerChains(){
@@ -1379,8 +1561,10 @@ function triggerChains(){
   add('urge','an urge',d=>(state.urges||[]).some(u=>u.date===d));
   for(const app of ['instagram','tiktok','youtube','snapchat']){const vals=days.map(d=>linkedMin(app,U.get(d))).filter(x=>x>0);if(vals.length<8)continue;const q=quant(vals,0.75);add('heavy:'+app,`heavy ${app[0].toUpperCase()+app.slice(1)} use`,d=>linkedMin(app,U.get(d))>=q&&q>0,false,app)}
   add('gambleapp','a gambling app opened',d=>{const u=U.get(d);return !!(u&&Object.keys(u.opens||{}).some(a=>GAMBLE_RE.test(a)))},false,'gambling');
-  add('adult','adult-site visits',d=>{const u=U.get(d);return !!(u&&(u.visits||{}).adult>0)},false,'adult');
-  for(const h of H){const L=state.habitLog[h.id]||{};add('slip:'+h.id,`a slip on “${h.name}”`,d=>L[d]===0,true,habitKey(h)||'slip:'+h.id)}
+  {const hv=[...U.values()].map(u=>u.health&&+u.health.hrv).filter(x=>x>0),hm=hv.length>=7?median(hv):null;if(hm)add('lowhrv','a stressful day (low heart-rate variability)',d=>{const x=(U.get(d)||{}).health;return !!(x&&+x.hrv>0&&+x.hrv<0.8*hm)})}
+  add('latehome','getting home after 11 PM',d=>((U.get(d)||{}).places||[]).some(x=>x.e==='arrive'&&/home/i.test(x.p)&&x.t>='23:00'));
+  add('adult','adult-site visits',d=>{const u=U.get(d);return !!(u&&(u.visits||{}).adult>0)},false,'porn');
+  for(const h of H){const L=state.habitLog[h.id]||{};add('slip:'+h.id,`a slip on “${h.name}”`,d=>L[d]===0,true,isAdultKey(habitKey(h))?'porn':habitKey(h)||'slip:'+h.id)}
   const keys=Object.keys(ev),links=[];
   for(const A of keys)for(const B of keys){if(A===B||!ev[B].effect)continue;
     // same-day pairs that are really one thing (opening the gambling app on a gambling slip day, a late night and short sleep) aren't triggers
@@ -1401,10 +1585,13 @@ const PLAYS={
   lowLinked:{label:'less time on the related app or sites the day before',plan:'If I catch myself opening it after 9 PM, then I close it and do something else for 10 minutes.'},
   sleep:{label:'7+ hours of sleep the night before',plan:"If it's 11:30 PM, then the phone goes on the charger and I head to bed."},
   mood:{label:'a better mood',plan:"If I'm feeling low, then I text a friend or go for a walk first."},
-  budget:{label:'staying under the daily budget',plan:"If it's payday, then I move my extra money to debt before anything else."}
+  budget:{label:'staying under the daily budget',plan:"If it's payday, then I move my extra money to debt before anything else."},
+  active:{label:'an active day (8,000+ steps)',plan:"If it's a hard day, then I go for a 20-minute walk before dinner."},
+  workout:{label:'a workout that day',plan:"If I feel restless in the evening, then I work out first."}
 };
 const STARTER={gambling:['If it\'s payday, then I move the money to debt or savings before anything else.','If I feel the urge to bet, then I tap the urge button and wait 10 minutes.','If a gambling app is on my phone, then I delete it today.'],
-  adult:['If it\'s after 11 PM, then my phone charges outside the bedroom.','If an urge hits, then I tap the urge button and take a shower or a walk.'],
+  porn:['If it\'s after 11 PM, then my phone charges outside the bedroom.','If I catch myself on an adult site, then I close it and leave the room for 5 minutes.'],
+  masturbation:['If it\'s after 11 PM, then my phone charges outside the bedroom.','If an urge hits, then I tap the urge button and take a cold shower or a walk.'],
   instagram:['If I open Instagram without a reason, then I close it after 5 minutes.','If it\'s after 10 PM, then Instagram stays closed (set an app limit).'],
   other:['If an urge hits, then I tap the urge button and wait 10 minutes.','If it\'s my hardest time of day, then I plan something to do in advance.']};
 function playbook(h){
@@ -1413,7 +1600,7 @@ function playbook(h){
   const risk=days.map(d=>{const c=combinedRisk(h,d);return c?c.p:ruleP(R,d,inc)}),cut=quant(risk,0.6),hard=days.filter((d,i)=>risk[i]>=cut);
   if(hard.filter(d=>L[d]===0).length<2||hard.length<8)return {plays:[],hard:hard.length};
   // screen time without the habit's own app (otherwise "less Instagram" would just mean "didn't slip")
-  const scr=u=>u&&u.total?Math.max(0,u.total-(key&&key!=='adult'&&key!=='gambling'?linkedMin(key,u):0)):null;
+  const scr=u=>u&&u.total?Math.max(0,u.total-(key&&!isAdultKey(key)&&key!=='gambling'?linkedMin(key,u):0)):null;
   const totals=days.map(d=>scr(U.get(d))).filter(x=>x>0),mt=totals.length?median(totals):null,lk=key?days.map(d=>linkedMin(key,U.get(d))).filter(x=>x>0):[],ml=lk.length?median(lk):null;
   const spend=new Map();for(const e of EXP)if(!e.reward&&!GAMBLE_RE.test(e.note||''))spend.set(e.date,(spend.get(e.date)||0)+(+e.amount||0));
   const F={
@@ -1421,7 +1608,9 @@ function playbook(h){
     lowLinked:d=>{if(!ml)return null;const u=U.get(D.add(d,-1));return u?linkedMin(key,u)<ml:null},
     sleep:d=>{const s=sleepFor(d,U);return s?s.hours>=7:null},
     mood:d=>{const m=(state.mood||{})[d];return m&&(m.t||'')<'15:00'?m.v>=4:null},
-    budget:d=>wb&&EXP.length?(spend.get(d)||0)<=wb/7:null};
+    budget:d=>wb&&EXP.length?(spend.get(d)||0)<=wb/7:null,
+    active:d=>{const x=(U.get(d)||{}).health;return x&&x.steps!=null?+x.steps>=8000:null},
+    workout:d=>{const x=(U.get(d)||{}).health;return x&&x.workout!=null?+x.workout>=20:null}};
   const plays=[];
   for(const [k,fn] of Object.entries(F)){const yes=[],no=[];for(const d of hard){const v=fn(d);if(v===true)yes.push(d);else if(v===false)no.push(d)}
     if(yes.length<3||no.length<3)continue;const cy=yes.filter(d=>L[d]===1).length/yes.length,cn=no.filter(d=>L[d]===1).length/no.length;
@@ -1539,6 +1728,8 @@ function mergeUsage(a,b){
     for(const k of ['apps','visits']){if(!v[k])continue;o[k]=o[k]||{};for(const [n,x] of Object.entries(v[k]))o[k][n]=Math.max(o[k][n]||0,+x)}
     for(const k of ['opens','closes']){if(!v[k])continue;o[k]=o[k]||{};for(const [n,ts] of Object.entries(v[k]))o[k][n]=[...new Set([...(o[k][n]||[]),...ts])].sort()}
     if(v.sleep)o.sleep=Object.assign({},o.sleep||{},v.sleep);
+    if(v.health)o.health=Object.assign({},o.health||{},v.health);if(v.deposit)o.deposit=Object.assign({},o.deposit||{},v.deposit);
+    if(v.places){const seen=new Set((o.places||[]).map(x=>x.t+x.e+x.p));o.places=(o.places||[]).concat(v.places.filter(x=>!seen.has(x.t+x.e+x.p))).sort((a,b)=>a.t<b.t?-1:1)}
     if(v.src)o.src=v.src;
   }
   return out;
@@ -1572,7 +1763,7 @@ function cardFor(name){const n=plain(name);const cards=(state.debts||[]).filter(
   if(/\btd\b/.test(n))return (cards.find(d=>/\btd\b/i.test(d.name))||{}).id;if(/mbna|amazon/.test(n))return (cards.find(d=>/mbna|amazon/i.test(d.name))||{}).id;return null}
 const inboxDone=new Set();let pendingInbox=[];
 async function processInbox(docs){
-  if(!state||!docs.length)return;let bought=0,opens=0;const months=new Set(),useMonths=new Set();
+  if(!state||!docs.length)return;let bought=0,opens=0,deposits=0;const months=new Set(),useMonths=new Set();
   for(const d of docs){
     if(inboxDone.has(d.id))continue;inboxDone.add(d.id);
     const x=d.data()||{},date=/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')?x.date:D.today(),time=/^\d{1,2}:\d{2}/.test(x.time||'')?x.time.padStart(5,'0'):'12:00';
@@ -1589,11 +1780,19 @@ async function processInbox(docs){
       // stored on the morning you wake up: a bedtime after noon belongs to the next day's night
       const wake=x.event==='wake',d2=wake||time<'12:00'?date:D.add(date,1),day=useDay(d2);day.sleep=Object.assign({},day.sleep||{},wake?{wake:time}:{bed:time});
       useMonths.add(d2.slice(0,7));opens++;
+    }else if(x.type==='health'){
+      const day=useDay(date),n=v=>{const z=parseFloat(String(v??'').replace(/[^\d.]/g,''));return isFinite(z)?Math.round(z*10)/10:null};
+      day.health=Object.assign({},day.health||{},Object.fromEntries([['steps',n(x.steps)],['workout',n(x.workout_min)],['hrv',n(x.hrv)]].filter(([,v])=>v!=null)));useMonths.add(date.slice(0,7));opens++;
+    }else if(x.type==='place'){
+      const day=useDay(date),it={t:time,e:x.event==='leave'?'leave':'arrive',p:String(x.place||'home').slice(0,30)};day.places=(day.places||[]).filter(y=>!(y.t===it.t&&y.e===it.e&&y.p===it.p)).concat(it).sort((a,b)=>a.t<b.t?-1:1);useMonths.add(date.slice(0,7));opens++;
+    }else if(x.type==='deposit'){
+      const day=useDay(date),amt=x.amount!=null?parseMoneyStr(x.amount):(String(x.text||'').match(/\$\s?([\d,]+(?:\.\d{2})?)/)||[])[1];
+      day.deposit={time,amount:amt!=null&&amt!==''?r2(parseMoneyStr(amt)):null};useMonths.add(date.slice(0,7));opens++;deposits++;
     }
   }
   months.forEach(saveExpMonth);useMonths.forEach(saveUseMonth);
   for(const d of docs){try{await expDb.doc('inbox/'+d.id).delete()}catch(e){}}
-  if(bought||opens){render();if(bought)toast(`Added ${bought} purchase${bought>1?'s':''} from Apple Pay`)}
+  if(bought||opens){render();if(bought)toast(`Added ${bought} purchase${bought>1?'s':''} from Apple Pay`);else if(deposits)toast('Deposit noticed. Payday lock is on.')}
 }
 function addExpense(e){const m=e.date.slice(0,7);const M=EXPM[m]=EXPM[m]||{items:[],rev:0};if(M.del)M.del=M.del.filter(x=>x!==e.id);M.items.push(e);saveExpMonth(m)}
 function removeExpense(id){for(const m in EXPM){const i=(EXPM[m].items||[]).findIndex(x=>x.id===id);if(i>=0){const x=EXPM[m].items.splice(i,1)[0];(EXPM[m].del=EXPM[m].del||[]).push(id);saveExpMonth(m);return x}}return null}
@@ -1695,7 +1894,7 @@ function normalize(s){
   s.savings=s.savings||{amount:0};s.invest=s.invest||{amount:0};
   s.flows=s.flows||[];s.debts=s.debts||[];s.log=s.log||[];
   s.habits=s.habits||[];s.habitLog=s.habitLog||{};s.weights=s.weights||[];s.sweeps=s.sweeps||{};s.accounts=s.accounts||[];s.chat=s.chat||[];
-  s.slipTimes=s.slipTimes||{};s.checkTimes=s.checkTimes||{};s.urges=s.urges||[];s.mood=s.mood||{};s.plans=s.plans||[];s.rewards=s.rewards||{earned:[]};s.rewards.earned=s.rewards.earned||[];s.paylock=s.paylock||{};
+  s.slipTimes=s.slipTimes||{};s.checkTimes=s.checkTimes||{};s.urges=s.urges||[];s.mood=s.mood||{};s.plans=s.plans||[];s.rewards=s.rewards||{earned:[]};s.rewards.earned=s.rewards.earned||[];s.paylock=s.paylock||{};s.predlog=s.predlog||{};s.experiments=s.experiments||[];s.habitSrc=s.habitSrc||{};
   return s;
 }
 function setSync(s){
@@ -1762,6 +1961,7 @@ async function initStore(){
     if(changed){lsSetX();rebuildExp();render()}
   },()=>setSync('error'));
   dbRef.onSnapshot(snap=>{
+    remoteSeen=true;
     if(snap.exists){
       const data=snap.data();const rv=+data.rev||0,mine=state?+state.rev||0:-1;
       if(!state||rv>mine||(!dirty&&!writing&&rv!==mine&&!cachedNewer(rv,mine))){const first=!state;state=normalize(JSON.parse(JSON.stringify(data)));lsSet(JSON.stringify(state));simCache=null;render();if(first&&pendingInbox.length)processInbox(pendingInbox)}
@@ -2655,7 +2855,7 @@ function viewHabits(){
   const allDone=H.length&&H.every(h=>stats[h.id].today!==undefined);
   const today=`<section class="card"><div class="card-h"><h2>${lbl(fmtDay,t)}</h2>${H.length&&!allDone?`<button type="button" class="btn sm accent" data-act="hab-all">All clean today</button>`:''}</div>
     ${H.length?`<div class="habs">${H.map(h=>{const s=stats[h.id];return `<div class="hab">${ring(s.prog,s.streak,s.today===1)}
-      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?(()=>{const tm=((S.slipTimes||{})[h.id]||{})[t];return `Slipped${tm?' at '+fmtHM(tm):''}. Tomorrow is day 1. <button type="button" class="linkbtn" data-act="sliptime" data-id="${esc(h.id)}">${tm?'Change time':'Add the time'}</button>`})():s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}${(()=>{const n=(S.urges||[]).filter(u=>u.habitId===h.id&&u.outcome==='resisted').length;return n?` · ${n} urge${n>1?'s':''} beaten`:''})()}</small>${s.today===undefined?(()=>{const l=linkedLabel(habitKey(h),usageOn(t));return l?`<em class="uhint">${esc(l)}</em>`:''})():''}</div>
+      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?(()=>{const tm=((S.slipTimes||{})[h.id]||{})[t];const src=((S.habitSrc||{})[h.id]||{})[t];if(src==='auto')return `Marked as slipped because of adult-site browsing. If you didn't, tap ✓. `;if(src==='shot'||src==='chat')return `Marked from ${src==='chat'?'chat':'your screenshots'}. `;return `Slipped${tm?' at '+fmtHM(tm):''}. Tomorrow is day 1. <button type="button" class="linkbtn" data-act="sliptime" data-id="${esc(h.id)}">${tm?'Change time':'Add the time'}</button>`})():s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}${(()=>{const n=(S.urges||[]).filter(u=>u.habitId===h.id&&u.outcome==='resisted').length;return n?` · ${n} urge${n>1?'s':''} beaten`:''})()}</small>${s.today===undefined?(()=>{const l=linkedLabel(habitKey(h),usageOn(t));return l?`<em class="uhint">${esc(l)}</em>`:''})():''}</div>
       <div class="hbtns" role="group" aria-label="${esc(h.name)} today"><button type="button" class="hb ok" data-act="hab" data-id="${esc(h.id)}" data-v="1" aria-pressed="${s.today===1}" aria-label="Clean today">✓</button><button type="button" class="hb no" data-act="hab" data-id="${esc(h.id)}" data-v="0" aria-pressed="${s.today===0}" aria-label="Slipped today">✗</button></div></div>`}).join('')}</div>`
       :`<div class="empty">Add the habits you want to quit or build.</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:8px"><button type="button" class="btn sm ghost" data-act="habits-edit" style="padding-left:0">${H.length?'Edit habits':'+ Add habits'}</button>
@@ -2666,7 +2866,7 @@ function viewHabits(){
     const first=habMonth+'-01',startPad=(dow(first)+6)%7,days=new Date(Date.UTC(+habMonth.slice(0,4),+habMonth.slice(5,7),0)).getUTCDate();
     let cells='';for(let i=0;i<startPad;i++)cells+='<span></span>';
     for(let d=1;d<=days;d++){const ds=habMonth+'-'+pad(d),v=L[ds],fut=ds>t;
-      cells+=`<button type="button" class="cd${v===1?' ok':v===0?' no':''}${ds===t?' today':''}" data-act="habday" data-d="${ds}"${fut?' disabled':''} aria-label="${lbl(fmtDay,ds)}: ${v===1?'clean':v===0?'slipped':'not logged'}">${d}</button>`}
+      cells+=`<button type="button" class="cd${v===1?' ok':v===0?' no':''}${ds===t?' today':''}${((S.habitSrc||{})[habSel]||{})[ds]&&v!==undefined?' auto':''}" data-act="habday" data-d="${ds}"${fut?' disabled':''} aria-label="${lbl(fmtDay,ds)}: ${v===1?'clean':v===0?'slipped':'not logged'}">${d}</button>`}
     const prevM=D.addMonths(first,-1).slice(0,7),nextM=D.addMonths(first,1).slice(0,7);
     cal=`<section class="card"><div class="card-h"><h2>Calendar</h2></div>
       ${H.length>1?`<div class="chips" role="tablist" style="margin-bottom:12px">${H.map(x=>`<label class="chip"><input type="radio" name="habsel" value="${esc(x.id)}"${x.id===habSel?' checked':''} data-act="habsel"><span>${esc(x.name)}</span></label>`).join('')}</div>`:''}
@@ -2687,7 +2887,7 @@ function viewHabits(){
       <div class="wlist">${W.slice(-4).reverse().map(w=>`<button type="button" class="xrow" data-act="weight-edit" data-id="${esc(w.id)}"><i style="background:var(--invest)"></i><div class="xn">${lbl(fmtDay,w.date)}</div><div class="xa">${wFmt(w.kg)} ${u}</div></button>`).join('')}</div>`
       :`<div class="empty">Log your weight now and then (once a week is plenty). The trend line smooths out daily ups and downs.</div>`}
     </section>`;
-  return `<div class="cols"><div class="stack">${riskCard()}${today}${focusCard()}${forecastCard()}${streakOddsCard()}${cal}</div><div class="stack">${futuresCard()}${playbookCard()}${patternsCard()}${rewardsCard()}${usageCard()}${weight}</div></div>`;
+  return `<div class="cols"><div class="stack">${riskCard()}${today}${focusCard()}${forecastCard()}${trackCard()}${streakOddsCard()}${cal}</div><div class="stack">${futuresCard()}${expCard()}${playbookCard()}${patternsCard()}${rewardsCard()}${usageCard()}${weight}</div></div>`;
 }
 function drawWeight(){const el=$('#wchart');if(!el)return;const t=D.today(),from=wRange==='1m'?D.add(t,-31):wRange==='3m'?D.add(t,-92):wRange==='1y'?D.add(t,-366):'0000';
   const ws=state.weights.slice().sort((a,b)=>a.date<b.date?-1:1).filter(w=>w.date>=from);el.innerHTML=ws.length>1?weightChart(ws,Math.max(260,Math.round(el.clientWidth||520))):'<p class="hint">Not enough weigh-ins in this range.</p>'}
@@ -2809,7 +3009,7 @@ function riskCard(){
     if(pk===dow(t)&&A.share[pk]>=0.22)spend=`<div class="rk"><span class="ti">$</span><div><b>${WD[pk]}s are your biggest spending day</b><p>About ${Math.round(A.share[pk]*100)}% of your spending happens today. ${$m0(Math.max(0,A.budget-A.spent))} left in this week's budget.</p></div><button type="button" class="x" data-act="risk-ok" data-id="spend" aria-label="Dismiss">×</button></div>`}
   if(!R.length&&!spend)return '';
   return `<section class="card risk"><div class="card-h"><h2>Heads up today</h2></div>
-    ${R.map(x=>{const dw=dangerWindow(x.habit),pl=plansFor(x.habit)[0];return `<div class="rk"><span class="ti">!</span><div><b>Hard day for “${esc(x.habit.name)}”</b><p>${x.model?`About a ${Math.round(x.model.p*100)}% chance of a slip today, versus ${Math.round(x.model.base*100)}% on a usual day${x.model.why&&x.model.why.length?`. Higher because of ${x.model.why.join(', ')}`:''}.`:`More of your slips happen on ${x.reasons.join(' and ')}.`}${dw?` Your hardest time is <strong>${dw.label}</strong>.`:''}${pl?` Your plan: ${esc(pl.text)}`:" Plan something for tonight and check in when you've made it."}</p></div><button type="button" class="x" data-act="risk-ok" data-id="${esc(x.habit.id)}" aria-label="Dismiss">×</button></div>`}).join('')}${spend}</section>`;
+    ${R.map(x=>{const dw=dangerWindow(x.habit),pl=plansFor(x.habit)[0];return `<div class="rk"><span class="ti">!</span><div><b>Hard day for “${esc(x.habit.name)}”</b><p>${x.model?`About a ${Math.round(x.model.p*100)}% chance of a slip today (${rangeTxt(x.model)}), versus ${Math.round(x.model.base*100)}% on a usual day${x.model.why&&x.model.why.length?`. Higher because of ${x.model.why.join(', ')}`:''}.`:`More of your slips happen on ${x.reasons.join(' and ')}.`}${dw?` Your hardest time is <strong>${dw.label}</strong>.`:''}${pl?` Your plan: ${esc(pl.text)}`:" Plan something for tonight and check in when you've made it."}</p></div><button type="button" class="x" data-act="risk-ok" data-id="${esc(x.habit.id)}" aria-label="Dismiss">×</button></div>`}).join('')}${spend}</section>`;
 }
 function patternsCard(){
   const L=habitLinks(state).slice(0,4);
@@ -2839,6 +3039,8 @@ function focusCard(){
     ${m?`<div class="moodset"><span>Feeling ${MOODS[m.v-1]} ${MOOD_LBL[m.v-1].toLowerCase()} today</span><button type="button" class="btn sm ghost" data-act="mood-clear">Change</button></div>`
       :`<div class="moodq"><span>How are you feeling today?</span><div class="moods" role="group" aria-label="Mood">${MOODS.map((e,i)=>`<button type="button" data-act="mood" data-v="${i+1}" aria-label="${MOOD_LBL[i]}" title="${MOOD_LBL[i]}">${e}</button>`).join('')}</div></div>`}
     ${plans.length?`<ul class="plans">${plans.map(p=>`<li><span>${esc(p.text)}</span></li>`).join('')}</ul>`:''}
+    ${(()=>{const e=expTonight();return e?`<div class="exp-tonight ${e.on?'on':''}" style="margin-top:10px"><span class="eyebrow">Experiment · night ${e.day} of ${e.len}</span><b>${e.on?esc(e.x.text):'Normal night'}</b><small>${e.on?'Tonight is an "on" night.':'Tonight is an "off" night, for comparison.'}</small></div>`:''})()}
+    ${liveHTML()}
     <button type="button" class="btn urgebtn" data-act="urge">I have an urge</button></section>`;
 }
 let urgeTimer=null;
@@ -2875,6 +3077,7 @@ function urgeKitSheet(){
     onSubmit:fd=>{const L=v=>String(v||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);state.settings.alts=L(fd.get('alts')).slice(0,10);state.settings.reasons=L(fd.get('rs')).slice(0,8);commit('Saved')}});
 }
 function stampHabit(id,date,v){
+  setSrc(id,date,null);
   const S=state.slipTimes=state.slipTimes||{},C=state.checkTimes=state.checkTimes||{};S[id]=S[id]||{};C[id]=C[id]||{};
   if(v===0){if(date===D.today())S[id][date]=nowHM()}else delete S[id][date];
   if(v===1){if(date===D.today())C[id][date]=nowHM()}else delete C[id][date];
@@ -2893,7 +3096,7 @@ function forecastCard(){
   const rows=H.map(h=>{const f=forecast7(h),hh=hourHist(h),dw=dangerWindow(h);let fc;
     if(f){const hi=f.reduce((a,b)=>b.p>a.p?b:a,f[0]);
       fc=`<div class="fc7">${f.map(x=>{const lvl=x.p>=Math.max(0.25,1.6*x.base)?'hi':x.p>=1.25*x.base?'mid':'';return `<div class="${lvl}" title="${lbl(fmtDay,x.d)}: ${Math.round(x.p*100)}%"><span>${x.d===t?'Today':fmtWd.format(D.parse(x.d))}</span><b>${Math.round(x.p*100)}%</b></div>`}).join('')}</div>
-        <small>Most likely hard day: <b>${hi.d===t?'today':lbl(fmtDay,hi.d)}</b> (${Math.round(hi.p*100)}%; a usual day is ${Math.round(hi.base*100)}%).</small>`}
+        <small>Most likely hard day: <b>${hi.d===t?'today':lbl(fmtDay,hi.d)}</b> (${Math.round(hi.p*100)}%, ${rangeTxt(hi)}; a usual day is ${Math.round(hi.base*100)}%).</small>`}
     else{const M=slipModels().m[h.id];fc=M?`<small>No day stands out yet. Your slips don't follow a pattern the app can predict better than your average, about ${Math.round(M.base*100)}% a day. It keeps checking as you log.</small>`:'<small>The forecast starts after about a month of check-ins with at least 4 slips.</small>'}
     const bars=hh.n>=2?`<div class="hrs-h">${dw?`Hardest hours: <b>${dw.label}</b> (${Math.round(dw.share*100)}% of your slips and urges)`:'When your slips and urges happen'}</div>${hourBars(hh.w,dw)}`
       :'<small>Your hardest hours show up here: tapping ✗ records the time, and so does the urge button.</small>';
@@ -2960,6 +3163,97 @@ function paydayCard(){
   return `<section class="card sweep"><div class="eyebrow">Payday lock</div><h3>Money just came in. Lock it away first.</h3>
     <p class="small muted" style="margin:4px 0 10px">${P.plan?'Do "Your move today" above before anything else. ':''}${P.free==null?'Enter your bank balance so the app can tell you how much is safe to move. ':mv?`About ${$m0(P.free)} isn't needed for rent and bills in the next 6 weeks. Moving it to savings now puts it out of reach. `:P.plan?'':'All of it is needed for bills before next payday, so protect it tonight. '}The days after payday are hardest for “${esc(P.habit.name)}”.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">${mv?`<button type="button" class="btn accent sm" data-act="paylock-save" data-v="${P.free}">Move ${$m0(P.free)} to savings</button>`:''}<button type="button" class="btn sm ghost" data-act="paylock-ok">${mv?'Not now':'Got it'}</button></div></section>`;
+}
+/* ---------- track record: is the forecast actually right? ---------- */
+function trackCard(){
+  const H=state.habits||[];if(!H.length)return '';const pc=x=>Math.round(x*100)+'%';
+  const rows=H.map(h=>{const M=slipModels().m[h.id];if(!M)return `<div class="so"><b>${esc(h.name)}</b><small>Starts after about a month of check-ins with a few slips.</small></div>`;
+    const S=ledgerScore(h),k=chosenMethod(h),ks=Object.keys(S.res||{}).sort((a,b)=>S.res[b].skill-S.res[a].skill);
+    const head=S.n?`Tested on ${S.n} day${S.n>1?'s':''}: ${S.replay?`${S.replay} replayed (retrained each day on only the days before it)`:''}${S.replay&&S.live?' + ':''}${S.live?`${S.live} predicted live, before the day happened`:''}.`:'Replaying your past days…';
+    return `<div class="so"><b>${esc(h.name)}</b><small>${head} ${k?`In use: <b>${METHOD[k]}</b>${S.n>=20?' (best real record)':''}.`:ks.some(m=>S.res[m].skill>0.01&&S.res[m].n<20)?'Promising, but a method needs 20 tested days before the app trusts it.':'Nothing beats your plain average yet, so no day is flagged as risky.'}${M.pooled?' Learns from your other habits too.':''}</small>
+      ${ks.map(m=>`<div class="sobar" title="${S.res[m].n} days tested"><span>${METHOD[m]} <small>(${S.res[m].n}d)</small></span><i><em style="width:${Math.max(0,Math.min(100,Math.round(S.res[m].skill*200)))}%;${S.res[m].skill<=0?'background:var(--ink-3)':''}"></em></i><strong>${S.res[m].skill>0?'+':''}${pc(S.res[m].skill)}</strong></div>`).join('')}
+      ${S.bins&&S.bins.length?`<small>Live calibration: ${S.bins.map(b=>`said about ${pc(b.pred)}, slipped ${pc(b.act)} of the time`).join('; ')}.</small>`:''}</div>`}).join('');
+  return `<section class="card"><div class="card-h"><h2>Track record</h2><span class="sub">Better than your average by…</span></div><div class="solist">${rows}</div>
+    <p class="hint" style="margin:8px 0 0">Every day the app saves its forecast before the day happens, then scores it. After 20 scored days it switches to whichever method has really been most accurate for you.</p></section>`;
+}
+/* ---------- live: next 3 hours ---------- */
+function liveHTML(){
+  const hr=new Date().getHours();if(hr<15&&hr>=4)return '';
+  const xs=(state.habits||[]).map(h=>({h,r:liveRisk(h)})).filter(x=>x.r&&x.r.p>=0.03).sort((a,b)=>b.r.p-a.r.p).slice(0,3);if(!xs.length)return '';
+  return `<div class="live"><div class="live-h"><span class="eyebrow">Next 3 hours</span><span class="hint">Updates as the night goes on</span></div>${xs.map(({h,r})=>{const up=r.p>=Math.max(0.15,1.5*r.usual);
+    return `<div class="live-r${up?' up':''}"><span>${esc(h.name)}</span><b>${Math.round(r.p*100)}%</b><small>${r.src==='live'?(up?`up from ${Math.round(r.usual*100)}% usual at this hour${r.why.length?': '+esc(r.why.join(', ')):''}`:`about usual for this hour`):'from today\'s forecast and your usual hours'}</small></div>`}).join('')}</div>`;
+}
+/* ---------- experiments ---------- */
+function expTonight(){const x=activeExperiment();if(!x)return null;const t=D.today();return {x,on:x.nights[t]===1,day:D.diff(x.start,t)+1,len:Object.keys(x.nights).length}}
+function expCard(){
+  const H=state.habits||[];if(!H.length)return '';const t=D.today(),y=D.add(t,-1),E=(state.experiments||[]);
+  for(const x of E)if(x.status==='active'&&x.end<t)x.status='done';
+  const A=E.find(x=>x.status==='active'),done=E.filter(x=>x.status==='done').slice(-3).reverse();
+  const habN=id=>((H.find(h=>h.id===id)||{}).name)||'a habit';
+  const resTxt=(x,R)=>R.verdict==='early'?`Too early to tell (${R.n1} "on" and ${R.n0} "off" nights logged).`
+    :`On nights: slipped ${R.k1} of ${R.n1} (${Math.round(R.r1*100)}%). Off nights: ${R.k0} of ${R.n0} (${Math.round(R.r0*100)}%). ${R.verdict==='works'?`<b>It works for you:</b> ${Math.round(R.pBetter*100)}% sure it lowers your slips.`:R.verdict==='worse'?'It seems to make things worse for you.':`No clear effect yet (${Math.round(R.pBetter*100)}% chance it helps).`}`;
+  let body='';
+  if(A){const R=expResult(A),tn=expTonight(),ask=A.nights[y]===1&&A.done[y]===undefined;
+    body=`<div class="so"><b>${esc(A.text)}</b><small>For “${esc(habN(A.habitId))}” · day ${tn?tn.day:'–'} of ${Object.keys(A.nights).length}</small>
+      ${tn?`<div class="exp-tonight ${tn.on?'on':''}"><span class="eyebrow">Tonight</span><b>${tn.on?esc(A.text):'Normal night'}</b><small>${tn.on?'This is an experiment night.':'For comparison: just go about your night as usual.'}</small></div>`:''}
+      ${ask?`<div class="moodset"><span>Last night was an experiment night. Did you do it?</span><span style="display:flex;gap:6px"><button type="button" class="btn sm" data-act="exp-did" data-v="1">Yes</button><button type="button" class="btn sm ghost" data-act="exp-did" data-v="0">No</button></span></div>`:''}
+      <small>${resTxt(A,R)}</small><div><button type="button" class="btn sm ghost" data-act="exp-stop" style="padding-left:0">Stop experiment</button></div></div>`}
+  else body=`<p class="small muted" style="margin:0 0 10px">Test one change for 2 to 4 weeks. The app picks "on" and "off" nights at random, so if your slips drop on "on" nights, you know it's the change and not a coincidence.</p><button type="button" class="btn sm primary" data-act="exp-new">Start an experiment</button>`;
+  return `<section class="card"><div class="card-h"><h2>Experiments</h2><span class="sub">What really works for you</span></div>${body}
+    ${done.length?`<div class="fld" style="margin-top:12px"><span>Results</span>${done.map(x=>{const R=expResult(x);return `<div class="so"><b>${esc(x.text)}</b><small>${resTxt(x,R)}</small></div>`}).join('')}</div>`:''}</section>`;
+}
+function expSheet(){
+  const H=state.habits||[];
+  openSheet({title:'Start an experiment',lead:'Pick one change. Each night, the app tells you if it\'s an "on" night (do it) or an "off" night (live as usual). Random nights are what make the result trustworthy.',
+    body:`<label class="fld"><span>Habit to test it on</span><select name="hid">${H.map(h=>`<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('')}</select></label>
+      <div class="fld"><span>The change</span><div class="chips" role="radiogroup">${EXP_T.map((x,i)=>`<label class="chip"><input type="radio" name="tpl" value="${x.id}"${i===0?' checked':''}><span>${esc(x.text)}</span></label>`).join('')}<label class="chip"><input type="radio" name="tpl" value="own"><span>My own</span></label></div></div>
+      <label class="fld"><span>Or describe your own</span><input name="own" placeholder="e.g. No phone in bed"></label>
+      <label class="fld"><span>How long</span><select name="len"><option value="14">2 weeks</option><option value="21" selected>3 weeks</option><option value="28">4 weeks</option></select></label>`,
+    submit:'Start',
+    onSubmit:fd=>{const tid=fd.get('tpl'),own=String(fd.get('own')||'').trim(),T=EXP_T.find(x=>x.id===tid);if(tid==='own'&&!own){toast('Describe your change');return false}
+      const x=newExperiment(fd.get('hid'),tid==='own'||(!T&&own)?own:T.text,tid==='own'?'Live as usual':T.off,+fd.get('len')||21);
+      state.experiments=(state.experiments||[]).filter(e=>e.status!=='active').concat(x);commit(x.nights[D.today()]?'Started. Tonight is an "on" night.':'Started. Tonight is a normal night.')}});
+}
+/* ---------- habits marked from evidence (screenshots, browsing): porn means porn, and masturbation is assumed ---------- */
+function setSrc(id,d,src){const S=state.habitSrc=state.habitSrc||{};S[id]=S[id]||{};if(src)S[id][d]=src;else delete S[id][d]}
+function habitByKey(k){return (state.habits||[]).find(h=>habitKey(h)===k)||null}
+function evidenceSuggestions(screens){
+  const out=new Map(),t=D.today(),put=(h,d,v,why,on)=>{if(!h||!d||d>t)return;const k=h.id+'|'+d;const L=state.habitLog[h.id]||{};if(L[d]===v)return;
+    // a day you already marked clean stays yours, except porn, where adult sites in your history are the slip itself
+    if(!out.has(k))out.set(k,{h,d,v,why,on:on!==false&&!(L[d]===1&&habitKey(h)!=='porn'),prev:L[d]})};
+  const P=habitByKey('porn'),Mh=habitByKey('masturbation'),G=habitByKey('gambling');
+  for(const s of screens){
+    for(const e of s.history||[]){const d=/^\d{4}-\d{2}-\d{2}$/.test(e.date||'')?e.date:null;if(!d)continue;
+      if(e.category==='adult'){put(P,d,0,'adult sites in your history');put(Mh,d,0,'assumed from adult sites in your history')}
+      if(e.category==='gambling')put(G,d,0,'gambling sites in your history')}
+    for(const x of s.transactions||[])if(x.direction!=='in'&&x.date&&GAMBLE_RE.test(x.description||''))put(G,x.date,0,`${String(x.description).slice(0,24)} charge`);
+    const st=s.screen_time;if(st&&st.period!=='week'&&st.date)for(const h of state.habits||[]){const k=habitKey(h);if(!k||isAdultKey(k)||k==='gambling')continue;
+      const mins=(st.apps||[]).filter(a=>plain(a.name).includes(k)).reduce((a,b)=>a+(+b.minutes||0),0);if(mins>=5)put(h,st.date,0,`${Math.round(mins)} min in Screen Time`)}
+    if(st&&st.period!=='week'&&st.date&&G)for(const a of st.apps||[])if(GAMBLE_RE.test(a.name||'')&&+a.minutes>=2)put(G,st.date,0,`${a.name} in Screen Time`)}
+  return [...out.values()].sort((a,b)=>a.d<b.d?-1:1);
+}
+function screensDays(screens){const ds=new Set(),t=D.today();for(const s of screens){for(const e of s.history||[])if(/^\d{4}-\d{2}-\d{2}$/.test(e.date||''))ds.add(e.date);for(const x of s.transactions||[])if(x.date)ds.add(x.date);if(s.screen_time&&s.screen_time.date&&s.screen_time.period!=='week')ds.add(s.screen_time.date)}return [...ds].filter(d=>d<t).sort()}
+/* the porn habit was added when porn and masturbation became separate habits: fill its slips from adult-site visits already logged */
+let remoteSeen=false;
+function maybeSplitHabits(){
+  if(!state||readOnly||state.settings.splitAdult||!(mode==='local'||remoteSeen))return;
+  const H=state.habits||[],hasM=H.some(h=>habitKey(h)==='masturbation'),hasP=H.some(h=>habitKey(h)==='porn');
+  if(hasM&&!hasP){const h={id:'noporn',name:'No porn',created:D.today()};H.push(h);const L=state.habitLog[h.id]=state.habitLog[h.id]||{};
+    const mh=H.find(x=>habitKey(x)==='masturbation'),LM=state.habitLog[mh.id]=state.habitLog[mh.id]||{};
+    for(const [d,u] of useMapAll())if((u.visits||{}).adult>0){L[d]=0;setSrc(h.id,d,'shot');if(LM[d]===undefined){LM[d]=0;setSrc(mh.id,d,'auto')}}}
+  else if(hasP&&!hasM)H.push({id:'nomasturb',name:'No masturbation',created:D.today()});
+  state.habits=H;state.settings.splitAdult=true;persist();
+}
+/* chat can fix check-ins: "I didn't masturbate on Tuesday" */
+function chatSetCheckin(inp,applied){
+  const name=plain(String(inp.habit||'')),d=String(inp.date||''),st=String(inp.status||''),t=D.today();
+  const h=(state.habits||[]).find(x=>plain(x.name)===name)||(state.habits||[]).find(x=>plain(x.name).includes(name)||name.includes(plain(x.name)));
+  if(!h)return `No habit called "${inp.habit}". Habits: ${(state.habits||[]).map(x=>x.name).join(', ')}.`;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||d>t||d<D.add(t,-180))return 'Use a date in YYYY-MM-DD from the last 6 months, not in the future.';
+  const v=st==='clean'?1:st==='slipped'?0:st==='not_logged'?null:undefined;if(v===undefined)return 'status must be clean, slipped or not_logged.';
+  const L=state.habitLog[h.id]=state.habitLog[h.id]||{},prev=L[d];if(v===null)delete L[d];else L[d]=v;
+  const S=state.slipTimes=state.slipTimes||{};if(v!==0&&S[h.id])delete S[h.id][d];setSrc(h.id,d,v===null?null:'chat');
+  applied.push({id:h.id,name:h.name,d,v,prev});return `Saved: ${h.name} on ${d} is now ${st.replace('_',' ')}.`;
 }
 /* ---------- 5) purchase predictions and alerts ---------- */
 function purchaseCard(){
@@ -3082,7 +3376,7 @@ function streakOddsCard(){
     if(!o)return `<div class="so"><b>${esc(h.name)}</b><small>Needs about 2 weeks of check-ins (and at least 2 slips) to estimate your odds.</small></div>`;
     const bar=(l,p)=>`<div class="sobar"><span>${l}</span><i><em style="width:${Math.round(p*100)}%"></em></i><strong>${Math.round(p*100)}%</strong></div>`;
     return `<div class="so"><b>${esc(h.name)}</b>${bar(`Reach ${o.next} days`,o.pNext)}${o.p30!=null&&o.next<30?bar('Reach 30 days',o.p30):''}
-      <small>${o.medianLen!=null?`Your streaks usually end around day ${o.medianLen+1}. `:''}${o.danger?`Watch day ${o.danger.day}${o.danger.day===o.c+1?' (tomorrow)':''}: that's where your streaks tend to break. `:''}${rf&&rf.length?`What raises your risk: ${rf.join(', ')}. `:''}${M&&M.skill>0.01?`The predictor beats plain averages by ${Math.round(M.skill*100)}% on your recent days.`:M?'The predictor is still learning (not yet better than averages).':''}</small>${calibHTML(M)}</div>`}).join('');
+      <small>${o.medianLen!=null?`Your streaks usually end around day ${o.medianLen+1}. `:''}${o.danger?`Watch day ${o.danger.day}${o.danger.day===o.c+1?' (tomorrow)':''}: that's where your streaks tend to break. `:''}${rf&&rf.length?`What raises your risk: ${rf.join(', ')}. `:''}${M&&M.skill>0.01?`The predictor beats plain averages by ${Math.round(M.skill*100)}% on your recent days.`:M?'The predictor is still learning (not yet better than averages).':''}</small></div>`}).join('');
   return `<section class="card"><div class="card-h"><h2>Streak odds</h2><span class="sub">From your own history</span></div><div class="solist">${rows}</div></section>`;
 }
 /* 3) the combined forecast: how much it trusts each method, and whether its percentages come true */
@@ -3117,7 +3411,10 @@ function deepData(){
     two_futures_6_months:H.map(h=>{const v=twoFutures(h);return v?{habit:h.name,slip_every_days:Math.round(1/v.rate),money_at_stake:v.money!=null?Math.round(v.money):null,hours_at_stake:v.hours!=null?Math.round(v.hours):null,debt_free_if_clean:v.clean||null,debt_free_current_pace:v.base||null,price_of_one_slip:v.perSlip!=null?Math.round(v.perSlip):null}:null}).filter(Boolean),
     urges_last_7_days:{beaten:U.filter(u=>u.outcome==='resisted').length,slipped:U.filter(u=>u.outcome==='slipped').length},
     mood_avg_last_7_days_1_to_5:last7(d=>((S.mood||{})[d]||{}).v||null),sleep_avg_hours_last_7_days:last7(d=>{const x=sleepFor(d);return x?x.hours:null}),
-    fun_money_ready:rewardFund(S),current_if_then_plans:(S.plans||[]).map(p=>p.text)};
+    fun_money_ready:rewardFund(S),current_if_then_plans:(S.plans||[]).map(p=>p.text),
+    track_record:H.map(h=>{const L=ledgerScore(h),k=chosenMethod(h);return {habit:h.name,days_tested:L.n,method_in_use:k?METHOD[k]:null,skill_vs_average:L.res&&k&&L.res[k]?pc(L.res[k].skill):null}}),
+    next_3_hours_now:H.map(h=>{const x=liveRisk(h);return x?{habit:h.name,chance:pc(x.p),usual:pc(x.usual)}:null}).filter(Boolean),
+    experiments:(S.experiments||[]).slice(-3).map(x=>{const R=expResult(x);return {change:x.text,habit:((H.find(h=>h.id===x.habitId)||{}).name)||null,status:x.status,on_nights:`${R.k1}/${R.n1} slipped`,off_nights:`${R.k0}/${R.n0} slipped`,chance_it_helps:pc(R.pBetter),verdict:R.verdict}})};
 }
 async function runCoach(btn){
   const sample=IS_ARTIFACT?await window.claude.use('sample'):null;if(!sample){toast("Claude isn't available here");return}
@@ -3184,7 +3481,8 @@ function chatAttach(){const inp=document.createElement('input');inp.type='file';
 function chatPush(m){state.chat=(state.chat||[]).concat(m).slice(-40)}
 function chatData(){
   const d=coachData(),t=D.today(),days=[];for(let i=0;i<7;i++){const x=D.add(t,-i),u=usageOn(x);if(u)days.push({date:x,screen_minutes:u.total||null,top_apps:u.apps?Object.entries(u.apps).sort((a,b)=>b[1]-a[1]).slice(0,4):null,app_opens:u.opens?Object.fromEntries(Object.entries(u.opens).map(([k,v])=>[k,v.length])):null,visits:u.visits||null})}
-  return {...d,bank_accounts:(state.accounts||[]).map(a=>({name:a.name,balance:a.balance,as_of:a.asOf})),usage_last_7_days:days};
+  const hab={};for(const h of state.habits||[]){const L=state.habitLog[h.id]||{},x={};for(let i=0;i<14;i++){const dd=D.add(t,-i);x[dd]=L[dd]===1?'clean':L[dd]===0?'slipped':'not logged'}hab[h.name]=x}
+  return {...d,bank_accounts:(state.accounts||[]).map(a=>({name:a.name,balance:a.balance,as_of:a.asOf})),usage_last_7_days:days,habit_check_ins_last_14_days:hab};
 }
 async function sendChat(){
   if(chatBusy)return;const inp=$('#chat-in'),text=(inp&&inp.value||'').trim(),files=chatFiles.slice();if(!text&&!files.length)return;
@@ -3205,15 +3503,20 @@ async function sendChat(){
       const hist=(state.chat||[]).filter(m=>m.id!==aid&&m.text).slice(-13,-1).map(m=>({role:m.role,content:m.text}));
       const turns=[{role:'user',content:chatRules()+'\n\nDATA (current):\n'+JSON.stringify(chatData())},...hist,{role:'user',content:text}];
       const b=bub();if(b)b.innerHTML='<span class="muted">Thinking…</span>';
-      const {text:ans}=await sample(turns,{cache:false,onText:({text})=>{const b2=bub();if(b2){b2.textContent=text;scroll()}}});
-      setMsg({text:ans.trim()});
+      const lim=await sample.limits().catch(()=>null),applied=[],opts={cache:false,onText:({text})=>{const b2=bub();if(b2){b2.textContent=text;scroll()}}};
+      if(lim&&lim.tools&&(state.habits||[]).length)opts.tools=[{name:'set_check_in',description:'Set the habit check-in for one day when the user says what happened (e.g. "I didn\'t masturbate on Tuesday", "I gambled yesterday", "clear Monday"). Only use it for what the user clearly said.',
+        inputSchema:{type:'object',properties:{habit:{type:'string',description:'Habit name exactly as in the data'},date:{type:'string',description:'YYYY-MM-DD'},status:{type:'string',enum:['clean','slipped','not_logged']}},required:['habit','date','status']},
+        execute:inp=>chatSetCheckin(inp,applied)}];
+      const {text:ans}=await sample(turns,opts);
+      setMsg({text:ans.trim()+(applied.length?'\n\nUpdated: '+applied.map(a=>`${a.name} on ${lbl(fmtMD,a.d)} → ${a.v===1?'clean':a.v===0?'slipped':'not logged'}`).join(', '):'')});
+      if(applied.length)setTimeout(()=>toast(`Updated ${applied.length} check-in${applied.length>1?'s':''}`,()=>{for(const a of applied.slice().reverse()){const L=state.habitLog[a.id]=state.habitLog[a.id]||{};if(a.prev===undefined)delete L[a.d];else L[a.d]=a.prev;setSrc(a.id,a.d,null)}commit('Undone')}),400);
     }
   }catch(e){
     const c=e&&e.code;setMsg({text:(e&&e.text)||(c==='not_granted'?'Claude was not allowed for this page. You can allow it from the artifact\'s permissions.':c==='images_unavailable'?'Screenshots aren\'t available in this view.':c==='rate_limited'?'Too many requests right now. Try again in a bit.':c==='invalid_json'?'I couldn\'t read those screenshots clearly. Try sharper or fewer screenshots.':'Something went wrong. Try again.')});
   }
   chatBusy=false;commit();setTimeout(scroll,60);
 }
-function chatRules(){return `You are Claude, inside the user's personal app "Payoff Path". The user is a university student in Montreal paying off debt (credit cards, family loans, school fees), keeping a weekly spending budget, and quitting some habits. Below is their live data from the app. Answer their questions using it: specific, practical, warm and brief (usually 2 to 6 sentences, plain text, no markdown headings). If they ask about something the data can't show, say so. Never shame them about habits. You can explain options and math, but don't give personalized investment advice. If they want to change something in the app, tell them where to tap.`}
+function chatRules(){return `You are Claude, inside the user's personal app "Payoff Path". The user is a university student in Montreal paying off debt (credit cards, family loans, school fees), keeping a weekly spending budget, and quitting some habits. Below is their live data from the app. Answer their questions using it: specific, practical, warm and brief (usually 2 to 6 sentences, plain text, no markdown headings). If they ask about something the data can't show, say so. Never shame them about habits. You can explain options and math, but don't give personalized investment advice. If they want to change something in the app, tell them where to tap. Today is ${D.today()} (${WD[dow(D.today())]}). If they tell you how a day went for a habit (for example "I didn't masturbate on Tuesday" or "I gambled yesterday"), use the set_check_in tool for each day they mention, then confirm briefly. Porn and masturbation are separate habits: watching porn doesn't always mean masturbating, and the reverse.`}
 function extractPrompt(note){return `You read screenshots from a person's phone so their budgeting app can import them. Today is ${D.today()}. Dates without a year are in the last 12 months: choose the year that puts the date on or before today.
 Reply with only one JSON object: {"screens":[ ... one object per screenshot ... ]}. Each object:
 - "kind": "bank_account" | "credit_card" | "screen_time" | "browser_history" | "other"
@@ -3223,6 +3526,7 @@ Reply with only one JSON object: {"screens":[ ... one object per screenshot ... 
 - "transactions": [{"date":"YYYY-MM-DD","description":"merchant or description","amount":12.34,"direction":"out" or "in","pending":true or false}]. Money spent or charged is "out"; deposits, refunds and payments to a card are "in". Use [] if none.
 - "screen_time": only for Screen Time screenshots, else null: {"period":"day" or "week","date":"YYYY-MM-DD" (the day shown, or the first day of the week shown),"total_minutes":number,"pickups":number or null,"apps":[{"name":"Instagram","minutes":number}]}
 - "history": only for browser history, else []: [{"date":"YYYY-MM-DD","time":"HH:MM" or null,"category":"adult" | "social" | "gambling" | "shopping" | "video" | "news" | "other","site":"domain.com" or null}]. For adult sites set "site" to null and never write page titles.
+Browser history groups entries under headings like Today, Yesterday or a date: use those headings for each entry's date. Screen Time may show a past day (Yesterday, or a weekday or date): use that day's date.
 Convert durations like "1h 5m" to minutes. Skip anything you can't read clearly, and never invent transactions.${note?`\nThe person wrote: ${note}`:''}`}
 function summarizeScreens(S){
   if(!S.length)return "I couldn't find anything I can import in those screenshots.";
@@ -3239,7 +3543,7 @@ function summarizeScreens(S){
 const txDup=x=>EXP.some(e=>Math.abs(e.amount-Math.abs(+x.amount||0))<0.01&&x.date&&Math.abs(D.diff(e.date,x.date))<=1);
 function reviewScreens(msgId){
   const m=(state.chat||[]).find(x=>x.id===msgId);if(!m||!m.data)return;const S=m.data.screens||[],cards=state.debts.filter(d=>d.kind==='card');
-  const accRows=[],txRows=[],useRows=[];
+  const accRows=[],txRows=[],useRows=[],sug=evidenceSuggestions(S),cover=screensDays(S);
   S.forEach((s,i)=>{
     if(s.balance!=null&&s.kind==='credit_card'){const guess=cardFor((s.institution||'')+' '+(s.account_name||''));
       accRows.push(`<div class="improw"><input type="checkbox" name="a${i}" checked><div class="xn">Update card balance<small>${esc(s.institution||'')} ${esc(s.account_name||'')} · owing ${$m(s.balance)}</small></div><div class="xa"></div>
@@ -3256,7 +3560,9 @@ function reviewScreens(msgId){
     body:`${accRows.length?`<div class="fld"><span>Balances</span><div class="implist">${accRows.join('')}</div></div>`:''}
       ${txRows.length?`<div class="fld"><span>Transactions</span><div class="implist">${txRows.join('')}</div></div>`:''}
       ${useRows.length?`<div class="fld"><span>Phone and browsing</span>${useRows.join('')}</div>`:''}
-      ${!accRows.length&&!txRows.length&&!useRows.length?'<p class="small muted">Nothing to add from these screenshots.</p>':''}`,
+      ${sug.length?`<div class="fld"><span>Check-ins</span><div class="implist">${sug.map((x,i)=>`<div class="improw${x.on?'':' off'}"><input type="checkbox" name="hb${i}"${x.on?' checked':''}><div class="xn">${esc(x.h.name)}: slipped<small>${lbl(fmtDay,x.d)} · ${esc(x.why)}${x.prev===1?' · you had marked it clean':''}</small></div><div class="xa"></div></div>`).join('')}</div></div>`:''}
+      ${cover.length&&(state.habits||[]).length?`<label class="check"><input type="checkbox" name="fillclean"><span>Also mark these ${cover.length} day${cover.length>1?'s':''} clean for any habit where nothing showed up and you hadn't checked in</span></label>`:''}
+      ${!accRows.length&&!txRows.length&&!useRows.length&&!sug.length?'<p class="small muted">Nothing to add from these screenshots.</p>':''}`,
     submit:'Add to my app',
     onMount:f=>f.querySelectorAll('.improw input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>cb.closest('.improw').classList.toggle('off',!cb.checked))),
     onSubmit:fd=>{
@@ -3277,24 +3583,28 @@ function reviewScreens(msgId){
             day.apps={};for(const a of st.apps||[])if(a&&a.name)day.apps[a.name]=Math.round((+a.minutes||0)/(week?7:1));day.src=week?'screentime-week':'screentime';umonths.add(d.slice(0,7))}}
         if(s.history&&s.history.length&&fd.get('hi'+i)==='on'){const by={};for(const h of s.history){const d=/^\d{4}-\d{2}-\d{2}$/.test(h.date||'')?h.date:D.today();(by[d]=by[d]||{})[h.category||'other']=((by[d]||{})[h.category||'other']||0)+1}
           for(const [d,c] of Object.entries(by)){const day=useDay(d);day.visits=day.visits||{};for(const [k,v] of Object.entries(c))day.visits[k]=Math.max(day.visits[k]||0,v);umonths.add(d.slice(0,7))}}});
+      let nHab=0;sug.forEach((x,i)=>{if(fd.get('hb'+i)!=='on')return;const L=state.habitLog[x.h.id]=state.habitLog[x.h.id]||{};L[x.d]=x.v;setSrc(x.h.id,x.d,/assumed/.test(x.why)?'auto':'shot');nHab++});
+      if(fd.get('fillclean')==='on')for(const d of cover)for(const h of state.habits||[]){const L=state.habitLog[h.id]=state.habitLog[h.id]||{};if(L[d]===undefined&&!sug.some(x=>x.h.id===h.id&&x.d===d)){L[d]=1;setSrc(h.id,d,'shot');nHab++}}
       months.forEach(saveExpMonth);umonths.forEach(saveUseMonth);
-      m.applied=true;commit([nTx?`Added ${nTx} transaction${nTx>1?'s':''}`:'',balUpd.size?'balances updated':'',umonths.size?'usage saved':''].filter(Boolean).join(' · ')||'Saved');
+      m.applied=true;commit([nTx?`Added ${nTx} transaction${nTx>1?'s':''}`:'',balUpd.size?'balances updated':'',umonths.size?'usage saved':'',nHab?`${nHab} check-in${nHab>1?'s':''} filled in`:''].filter(Boolean).join(' · ')||'Saved');
     }});
 }
 /* ---------- usage: how habits link to apps and sites ---------- */
 function habitKey(h){const n=plain(h.name);
   for(const a of ['instagram','tiktok','snapchat','youtube','reddit','facebook','twitter','netflix','twitch'])if(n.includes(a))return a;
-  if(/gambl|casino|\bbet|poker|stake/.test(n))return 'gambling';if(/porn|masturb|fap|adult/.test(n))return 'adult';return null}
+  if(/gambl|casino|\bbet|poker|stake/.test(n))return 'gambling';if(/porn|adult/.test(n))return 'porn';if(/masturb|fap|jerk/.test(n))return 'masturbation';return null}
+// porn and masturbation are separate habits; adult-site visits are the slip for one and a strong sign for the other
+const isAdultKey=k=>k==='porn'||k==='masturbation';
 const GAMBLE_RE=/stake|bet|casino|poker|mise|loto|lotto|draftkings|fanduel|bet365|pokerstars|sportsbook|roulette|slots/i;
 function linkedMin(key,u){
   if(!key||!u)return 0;let m=0;
   if(key==='gambling'){for(const [n,x] of Object.entries(u.apps||{}))if(GAMBLE_RE.test(n))m+=x;for(const [n,t] of Object.entries(u.opens||{}))if(GAMBLE_RE.test(n))m+=t.length*6;m+=((u.visits||{}).gambling||0)*8}
-  else if(key==='adult')m+=((u.visits||{}).adult||0)*10;
+  else if(isAdultKey(key))m+=((u.visits||{}).adult||0)*10;
   else{let mins=0;for(const [n,x] of Object.entries(u.apps||{}))if(plain(n).includes(key))mins+=x;let op=0;for(const [n,t] of Object.entries(u.opens||{}))if(plain(n).includes(key))op+=t.length;m=mins||op*5}
   return m;
 }
 function linkedLabel(key,u){if(!key||!u)return '';const op=Object.entries(u.opens||{}).filter(([n])=>key==='gambling'?GAMBLE_RE.test(n):plain(n).includes(key)).reduce((s,[,t])=>s+t.length,0);
-  if(key==='adult'){const v=(u.visits||{}).adult||0;return v?`${v} adult-site visit${v>1?'s':''} logged today`:''}
+  if(isAdultKey(key)){const v=(u.visits||{}).adult||0;return v?`${v} adult-site visit${v>1?'s':''} logged today`:''}
   const mins=Object.entries(u.apps||{}).filter(([n])=>key==='gambling'?GAMBLE_RE.test(n):plain(n).includes(key)).reduce((s,[,x])=>s+x,0);
   return mins?`${Math.round(mins)} min on ${key==='gambling'?'gambling apps':key[0].toUpperCase()+key.slice(1)} today`:op?`${key==='gambling'?'Gambling app':key[0].toUpperCase()+key.slice(1)} opened ${op}× today`:''}
 function usageCard(){
@@ -3316,6 +3626,9 @@ function autoGuide(){
   const purchase='{"type":"purchase","date":"[Day]","time":"[Time]","merchant":"[Merchant]","amount":"[Amount]","card":"[Card]"}';
   const app='{"type":"app","date":"[Day]","time":"[Time]","app":"Instagram","event":"open"}';
   const sleepBed='{"type":"sleep","date":"[Day]","time":"[Time]","event":"bed"}';
+  const health='{"type":"health","date":"[Day]","steps":"[Steps]","workout_min":"[Workout minutes]","hrv":"[HRV]"}';
+  const place='{"type":"place","date":"[Day]","time":"[Time]","event":"arrive","place":"home"}';
+  const deposit='{"type":"deposit","date":"[Day]","time":"[Time]","text":"[Message]"}';
   const copyBtn=(v,l)=>`<button type="button" class="btn sm" data-act="copy" data-v="${esc(v)}">${l}</button>`;
   openSheet({title:'iPhone automations',lead:`Each Apple Pay tap and app open drops a tiny note in your private mailbox. ${IS_ARTIFACT?'Claude moves them into your app at 12:30, 5:30 and 9:40 PM.':'The app picks them up as soon as it opens.'}`,
     body:`<div class="guide">
@@ -3340,6 +3653,17 @@ function autoGuide(){
       <ol><li>Automation → <b>+</b> → <b>Sleep</b> → <b>Bedtime Begins</b> → Run Immediately. Same steps, with this text:<div class="code">${esc(sleepBed)}</div>${copyBtn(sleepBed,'Copy text')}</li>
         <li>Another one: <b>Sleep</b> → <b>Waking Up</b>, with <code>"event":"wake"</code>.</li>
         <li>No Sleep schedule? Skip this: the app estimates sleep from your last app use at night and the first one in the morning.</li></ol>
+      <h4>5 · Apple Health (optional: steps, workouts, stress)</h4>
+      <ol><li>Automation → <b>+</b> → <b>Time of Day</b> → <b>9:30 PM</b>, Daily → Run Immediately.</li>
+        <li>Add <b>Find Health Samples</b>: Type <b>Steps</b>, Start Date <b>is today</b>, then <b>Calculate Statistics → Sum</b> ([Steps]).</li>
+        <li>Again for <b>Workouts</b> (today) → <b>Calculate Statistics → Sum</b> of Duration in minutes ([Workout minutes]). If you have an Apple Watch, again for <b>Heart Rate Variability</b> (today) → <b>Average</b> ([HRV]). Leave out what you don't have.</li>
+        <li>Same Text, Base64 and upload steps as above, with:<div class="code">${esc(health)}</div>${copyBtn(health,'Copy text')}</li></ol>
+      <h4>6 · Getting home (optional)</h4>
+      <ol><li>Automation → <b>+</b> → <b>Arrive</b> → your home address → Run Immediately, with:<div class="code">${esc(place)}</div>${copyBtn(place,'Copy text')}</li>
+        <li>Another one for <b>Leave</b>, with <code>"event":"leave"</code>.</li></ol>
+      <h4>7 · Paydays (if your bank texts or emails you)</h4>
+      <ol><li>Automation → <b>+</b> → <b>Message</b> (or <b>Email</b>) → from your bank, containing <b>deposit</b> → Run Immediately, with:<div class="code">${esc(deposit)}</div>${copyBtn(deposit,'Copy text')} and [Message] = the message content.</li>
+        <li>KOHO's app notifications can't trigger Shortcuts, so this only works if you get deposit texts or emails. Otherwise the app uses your pay schedule.</li></ol>
       <p class="hint">Apple doesn't let any app read Screen Time totals. For minutes per app, drop a Screen Time screenshot in the Claude tab once in a while.</p></div>`,
     submit:'Done',noCancel:true,noFocus:true,onSubmit:()=>{}});
 }
@@ -3359,6 +3683,7 @@ function render(){
   const V=$('#views');
   $('#fab').hidden=!state||tab==='habits'||tab==='claude';
   if(!state){V.innerHTML=mode==='loading'?'<div class="loading">Loading your plan…</div>':emptyView();return}
+  maybeSplitHabits();
   const sim=getSim();
   V.innerHTML=tab==='claude'?viewClaude():tab==='habits'?viewHabits():tab==='spending'?viewSpending():tab==='plan'?viewPlan(sim):tab==='debts'?viewDebts(sim):tab==='setup'?viewSetup():viewToday(sim);
   if(tab==='plan'){drawChart();drawOutlook();drawFan()}
@@ -3366,8 +3691,10 @@ function render(){
   if(tab==='habits')drawWeight();
   if(tab==='claude'){const th=$('#thread');if(th)th.scrollTop=th.scrollHeight}
   setTimeout(checkMilestones,0);
-  clearTimeout(sigT);sigT=setTimeout(publishSignals,1500);
+  clearTimeout(sigT);sigT=setTimeout(()=>{try{if(recordPredictions())persist()}catch(e){console.error(e)}publishSignals()},1500);
 }
+// the live 3-hour risk refreshes itself every 5 minutes while the app is open
+setInterval(()=>{if(!state||document.hidden||!$('#sheet').hidden)return;const el=document.querySelector('section.focus');if(el)el.outerHTML=focusCard()},300000);
 /* signals/main: tonight's risk, hardest hours and plans, read by the evening Claude task to time its nudges */
 let sigT=null,sigLast=null;try{sigLast=localStorage.getItem('payoff-path.sig')}catch(e){}
 function publishSignals(){
@@ -3376,7 +3703,8 @@ function publishSignals(){
     o={date:t,gambling_habit:H.some(h=>habitKey(h)==='gambling'),payday_dates:[...incomeDaySet(state,D.add(t,-2),D.add(t,14))].sort(),
       habits:H.map(h=>{const dw=dangerWindow(h),r=combinedRisk(h,t),f=forecast7(h)||[],pl=plansFor(h)[0];
         return {name:h.name,key:habitKey(h),checked_in_today:(state.habitLog[h.id]||{})[t]!==undefined,window:dw?{start_hour:dw.start,end_hour:dw.end,label:dw.label}:null,
-          risk_today:r?Math.round(r.p*100):null,usual:r?Math.round(r.base*100):null,next7:f.map(x=>({date:x.d,risk:Math.round(x.p*100),elevated:x.p>=Math.max(0.2,1.4*x.base)})),plan:pl?pl.text:null}})}}
+          risk_today:r?Math.round(r.p*100):null,usual:r?Math.round(r.base*100):null,next7:f.map(x=>({date:x.d,risk:Math.round(x.p*100),elevated:x.p>=Math.max(0.2,1.4*x.base)})),plan:pl?pl.text:null,live:liveTable(h)}}),
+      experiment_tonight:(()=>{const e=expTonight();return e?{text:e.x.text,on:e.on,habit:((H.find(h=>h.id===e.x.habitId)||{}).name)||null}:null})()}}
   catch(e){console.error(e);return}
   const js=JSON.stringify(o);if(js===sigLast)return;sigLast=js;try{localStorage.setItem('payoff-path.sig',js)}catch(e){}
   expDb.doc('signals/main').set({...o,rev:Date.now(),updated:new Date().toISOString()}).catch(()=>{sigLast=null});
@@ -3743,6 +4071,9 @@ document.addEventListener('click',e=>{
   if(act==='plan-add'){const v=a.dataset.v;if(!(state.plans||[]).some(p=>p.text===v))state.plans=(state.plans||[]).concat({id:uid(),habitId:id||null,text:v,src:'playbook',at:D.today()});commit('Added to your plans');return}
   if(act==='plan-del'){const old=state.plans;state.plans=(state.plans||[]).filter(p=>p.id!==id);commit('Plan removed',()=>{state.plans=old;commit()});return}
   if(act==='plan-new')return planSheet();
+  if(act==='exp-new')return expSheet();
+  if(act==='exp-stop'){const x=activeExperiment()||(state.experiments||[]).find(e=>e.status==='active');if(!x)return;if(a.dataset.arm!=='1'){a.dataset.arm='1';a.textContent='Tap again to stop';return}x.status='stopped';x.end=D.today();commit('Experiment stopped');return}
+  if(act==='exp-did'){const x=(state.experiments||[]).find(e=>e.status==='active');if(!x)return;x.done[D.add(D.today(),-1)]=a.dataset.v==='1';commit(a.dataset.v==='1'?'Nice. Noted.':'Noted. It still counts: the comparison stays fair.');return}
   if(act==='rewards-edit')return rewardsSheet();
   if(act==='paylock-ok'||act==='paylock-save'){const P=paydayInfo();if(!P)return;const t=D.today();state.paylock=Object.fromEntries(Object.entries(state.paylock||{}).filter(([d])=>d>=D.add(t,-30)));
     if(act==='paylock-ok'){state.paylock[P.day]='ok';commit();return}
