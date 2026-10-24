@@ -397,7 +397,8 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
 .implist{display:grid;max-height:min(46vh,420px);overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:12px;padding:0 10px}
 .improw{display:grid;grid-template-columns:22px minmax(0,1fr) auto;grid-template-areas:"c n a" "c s s";gap:4px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
 .improw:first-child{border-top:0}
-.improw>input{grid-area:c;width:20px;height:20px;accent-color:var(--ink)}
+.improw>input[type=checkbox]{grid-area:c;width:20px;height:20px;accent-color:var(--ink)}
+.improw>input:not([type=checkbox]){grid-area:s;width:100%}
 .improw .xn{grid-area:n;font-size:14px;min-width:0;overflow-wrap:anywhere}
 .improw .xn small{display:block;font-size:12px;color:var(--ink-3)}
 .improw .xa{grid-area:a;font-family:var(--mono);font-size:13.5px;white-space:nowrap}
@@ -454,6 +455,42 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
 .rk .x{border:0;background:none;color:var(--ink-3);font-size:20px;line-height:1;padding:0 4px}
 .sweep{background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box;border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
 .sweep h3{font-family:var(--display);font-size:20px;margin-top:4px}
+/* top bar gear (phones: Setup lives here so the bottom bar keeps 6 tabs) */
+.topright{display:flex;align-items:center;gap:8px}
+.gear{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink-2)}
+.gear svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.gear[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
+@media (max-width:899px){.rail .tab[data-tab="setup"]{display:none}}
+@media (min-width:900px){.gear{display:none}}
+/* Claude chat */
+.chatcard{display:grid;gap:10px}
+.thread{display:grid;gap:10px;max-height:min(58vh,560px);overflow-y:auto;overscroll-behavior:contain;padding:2px}
+.msg{display:flex}
+.msg.user{justify-content:flex-end}
+.bub{max-width:86%;padding:10px 13px;border-radius:16px;font-size:15px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.user .bub{background:var(--ink);color:var(--bg);border-bottom-right-radius:6px}
+.msg.assistant .bub{background:var(--surface-2);border:1px solid var(--line);border-bottom-left-radius:6px}
+.hello p{margin:0 0 10px;font-size:14.5px;color:var(--ink-2)}
+.chip-btn{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.composer{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:8px;align-items:end}
+.composer textarea{font-family:var(--body);font-size:16px;resize:none;min-height:42px;max-height:140px;padding:10px 12px;border-radius:14px}
+.composer .attach,.composer .send{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:22px;line-height:1;color:var(--ink-2)}
+.composer .send{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:800}
+.composer .send:disabled{opacity:.5}
+.files{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:5px 6px 5px 10px;font-size:12.5px}
+.fchip button{border:0;background:none;color:var(--ink-3);font-size:16px;line-height:1;padding:0 4px}
+/* usage */
+.ubars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:90px;align-items:end}
+.ubars>div{display:grid;grid-template-rows:1fr auto;height:100%;gap:4px;text-align:center}
+.ubars i{align-self:end;display:block;border-radius:6px 6px 3px 3px;background:var(--invest);min-height:0}
+.ubars span{font-size:11px;color:var(--ink-3)}
+.uhint{display:block;font-style:normal;font-size:12px;color:var(--warn);margin-top:2px}
+.guide h4{font-family:var(--display);font-size:16px;margin:6px 0 6px}
+.guide ol{margin:0 0 8px;padding-left:20px;display:grid;gap:8px;font-size:14px;color:var(--ink-2)}
+.guide b{color:var(--ink)}
+.guide code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.guide .code{font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;overflow-wrap:anywhere}
 /* predictions */
 .oddrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .oddrow>div{background:var(--surface-2);border-radius:12px;padding:10px 12px;display:grid;gap:2px;min-width:0}
@@ -523,13 +560,15 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
     <button class="tab" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M5 19c4.5 0 3-7 7-7s2.5-7 7-7"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg><span>Plan</span><i class="tab-dot"></i></button>
     <button class="tab" data-tab="debts"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M2.5 10h19M6.5 15h4"/></svg><span>Debts</span><i class="tab-dot"></i></button>
     <button class="tab" data-tab="habits"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg><span>Habits</span><i class="tab-dot"></i></button>
+    <button class="tab" data-tab="claude"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v10.5H10l-6 4.5z"/><path d="M12 7.6l.95 2 2 .95-2 .95-.95 2-.95-2-2-.95 2-.95z"/></svg><span>Claude</span><i class="tab-dot"></i></button>
     <button class="tab" data-tab="setup"><svg viewBox="0 0 24 24"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg><span>Setup</span><i class="tab-dot"></i></button>
   </nav>
   <main>
     <div class="wrap">
       <header class="topbar">
         <div><h1 id="title">Today</h1><div class="date" id="today-label"></div></div>
-        <span class="sync" id="sync" data-s="local"><i></i><span>Loading</span></span>
+        <div class="topright"><span class="sync" id="sync" data-s="local"><i></i><span>Loading</span></span>
+          <button type="button" class="gear" data-tab="setup" aria-label="Setup" title="Setup"><svg viewBox="0 0 24 24"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg></button></div>
       </header>
       <div id="views" class="stack"><div class="loading">Loading your plan…</div></div>
     </div>
@@ -1007,6 +1046,18 @@ function habitLinks(S){
       if(sp>=2&&lift>=1.6){const p=binomTail(slips.length,sp,p0);if(p<0.15)res.push({id:'pay:'+h.id,kind:'payday',habit:h,score:lift*12*(1-p),
         text:`${sp} of your ${slips.length} slips on ${esc(nm)} came within 3 days of getting paid. Money in the account makes it harder.`})}}
   }
+  // phone & browsing: does more related-app or site use the day before come with more slips?
+  if(typeof USEM!=='undefined'){
+    const useMap=new Map();for(const M of Object.values(USEM))for(const [d,u] of Object.entries(M.days||{}))useMap.set(d,u);
+    for(const h of H){const key=habitKey(h),A=lab[h.id];if(!key||!A)continue;
+      const prev=d=>useMap.get(D.add(d,-1)),lab2=A.days.filter(d=>prev(d)),sl=lab2.filter(d=>A.L[d]===0),cl=lab2.filter(d=>A.L[d]===1);
+      if(sl.length<3||cl.length<7)continue;const a=sl.map(d=>linkedMin(key,prev(d))),b=cl.map(d=>linkedMin(key,prev(d))),ma=mean(a),mb=mean(b);
+      if(ma-mb<5||ma<mb*1.5)continue;const p=permP(a,b,ma-mb,rng(hash('use'+h.id)));if(p>=0.1)continue;
+      res.push({id:'uselink:'+h.id,kind:'usage',score:(ma-mb)*(1-p),text:`Slips on “${esc(h.name)}” tend to follow days with more ${key==='adult'?'adult-site browsing':key==='gambling'?'gambling-app use':key[0].toUpperCase()+key.slice(1)+' time'} (about ${Math.round(ma)} vs ${Math.round(mb)} min the day before).`})}
+    const ts=trackStart();if(ts){const ud=[...useMap.entries()].filter(([d,u])=>d>=ts&&d<t&&u.total>0);
+      if(ud.length>=14){const md=median(ud.map(([,u])=>u.total)),hi=ud.filter(([,u])=>u.total>md).map(([d])=>tot.get(d)||0),lo=ud.filter(([,u])=>u.total<=md).map(([d])=>tot.get(d)||0),mh=mean(hi),ml=mean(lo);
+        if(hi.length>=5&&lo.length>=5&&mh-ml>=5&&mh>=ml*1.4){const p=permP(hi,lo,mh-ml,rng(hash('screen-spend')));if(p<0.1)res.push({id:'screenspend',kind:'usage',score:(mh-ml)*3*(1-p),text:`On days with more screen time (over ${Math.round(md)} min), you spend more: ${$m0(mh)} a day vs ${$m0(ml)}.`})}}}
+  }
   for(const a of H)for(const b of H){if(a.id>=b.id)continue;const A=lab[a.id],B=lab[b.id];if(!A||!B)continue;
     const both=A.days.filter(d=>B.L[d]!==undefined);if(both.length<14)continue;
     const aS=both.filter(d=>A.L[d]===0),bS=both.filter(d=>B.L[d]===0),co=aS.filter(d=>B.L[d]===0).length;if(aS.length<3||bS.length<3||co<2)continue;
@@ -1069,7 +1120,7 @@ function streakOdds(h){
 }
 /* 2) personal slip predictor: logistic regression on your own check-ins (ridge-regularized), checked on your most
    recent 25% of days against simply using your average slip rate. Only used when it actually predicts better. */
-const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks'];
+const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks','more time on the related app or sites the day before','more screen time the day before'];
 const sigm=z=>1/(1+Math.exp(-z));
 function slipFeatures(h,d,ctx,future){
   const L=ctx.logs[h.id]||{},y=D.add(d,-1),w=dow(d),f=[1];for(let i=0;i<7;i++)f.push(w===i?1:0);
@@ -1080,6 +1131,10 @@ function slipFeatures(h,d,ctx,future){
   let o=0;if(!future)for(const hh of ctx.habits)if(hh.id!==h.id&&(ctx.logs[hh.id]||{})[y]===0)o=1;f.push(o);
   f.push(!future&&ctx.ts&&y>=ctx.ts?Math.min(1.5,Math.log1p(ctx.spend.get(y)||0)/4):0);
   f.push(seasonOf(d)==='exams'?1:0);
+  // phone & browsing the day before (from screenshots / iPhone automations), when available
+  const uy=!future&&ctx.usage?ctx.usage.get(y):null;
+  f.push(uy?Math.min(2,Math.log1p(linkedMin(habitKey(h),uy))/3):0);
+  f.push(uy&&uy.total?Math.min(2,Math.log1p(uy.total)/5):0);
   return f;
 }
 // ridge logistic regression fitted exactly with Newton's method (a few steps, tiny matrix)
@@ -1111,7 +1166,8 @@ let slipCache=null;
 function slipModels(){
   const k=state.rev+'|'+(typeof expRev!=='undefined'?expRev:0)+'|'+D.today();if(slipCache&&slipCache.k===k)return slipCache;
   const t=D.today(),spend=new Map();for(const e of EXP)spend.set(e.date,(spend.get(e.date)||0)+(+e.amount||0));
-  const ctx={t,habits:state.habits||[],logs:state.habitLog||{},inc:incomeDaySet(state,D.add(t,-260),D.add(t,120)),spend,ts:trackStart()},m={};
+  const usage=new Map();if(typeof USEM!=='undefined')for(const M of Object.values(USEM))for(const [d,u] of Object.entries(M.days||{}))usage.set(d,u);
+  const ctx={t,habits:state.habits||[],logs:state.habitLog||{},inc:incomeDaySet(state,D.add(t,-260),D.add(t,120)),spend,ts:trackStart(),usage},m={};
   for(const h of ctx.habits){try{m[h.id]=slipModel(h,ctx)}catch(e){m[h.id]=null}}
   return slipCache={k,ctx,m};
 }
@@ -1215,6 +1271,68 @@ async function flushExp(m){
   expWriting[m]=false;
   if(retry)setTimeout(()=>flushExp(m),2000+Math.random()*1000);else if(expDirty[m])flushExp(m);
 }
+/* ---------- phone & browsing usage: one document per month, usage/2026-10 = {days:{date:{...}}, rev} ----------
+   day = {apps:{Instagram:minutes}, total, pickups, opens:{Instagram:["21:04"]}, closes:{...}, visits:{adult:2,social:5}, src} */
+let USEM={},useRev=0;const useWriting={},useDirty={},LSU='payoff-path.use.v1';
+function mergeUsage(a,b){
+  const out={days:{},rev:Math.max(+a.rev||0,+b.rev||0)};
+  for(const src of [a.days||{},b.days||{}])for(const [d,v] of Object.entries(src)){
+    const o=out.days[d]=out.days[d]||{};
+    for(const k of ['total','pickups'])if(v[k]!=null)o[k]=Math.max(o[k]||0,+v[k]);
+    for(const k of ['apps','visits']){if(!v[k])continue;o[k]=o[k]||{};for(const [n,x] of Object.entries(v[k]))o[k][n]=Math.max(o[k][n]||0,+x)}
+    for(const k of ['opens','closes']){if(!v[k])continue;o[k]=o[k]||{};for(const [n,ts] of Object.entries(v[k]))o[k][n]=[...new Set([...(o[k][n]||[]),...ts])].sort()}
+    if(v.src)o.src=v.src;
+  }
+  return out;
+}
+function useDay(date){const m=date.slice(0,7),M=USEM[m]=USEM[m]||{days:{},rev:0};return M.days[date]=M.days[date]||{}}
+function saveUseMonth(m){
+  USEM[m].rev=Date.now();try{localStorage.setItem(LSU,JSON.stringify(USEM))}catch(e){}useRev++;simCache=null;anaCache=null;slipCache=null;
+  if(mode!=='db'||!expDb||readOnly)return;useDirty[m]=true;flushUse(m);
+}
+async function flushUse(m){
+  if(useWriting[m]||!useDirty[m])return;useWriting[m]=true;useDirty[m]=false;let retry=false;
+  try{const out=await expDb.doc('usage/'+m).set(JSON.parse(JSON.stringify(USEM[m])));if(out&&out.days)USEM[m]=mergeUsage(USEM[m],out)}
+  catch(e){if(e&&e.code==='unauthorized')setSync('auth');else{useDirty[m]=true;retry=true}}
+  useWriting[m]=false;if(retry)setTimeout(()=>flushUse(m),2500);else if(useDirty[m])flushUse(m);
+}
+const usageOn=d=>{const M=USEM[d.slice(0,7)];return M&&M.days&&M.days[d]||null};
+function hasUsage(){return Object.values(USEM).some(M=>M&&M.days&&Object.keys(M.days).length)}
+/* bank accounts (KOHO, TD chequing…): the app's bank balance is their total once any are known */
+function setAccountBalance(name,balance){
+  state.accounts=state.accounts||[];const id=plain(name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'account';
+  let a=state.accounts.find(x=>x.id===id);if(!a){a={id,name};state.accounts.push(a)}a.balance=r2(balance);a.asOf=D.today();
+}
+function cashFromAccounts(){
+  const tot=r2((state.accounts||[]).reduce((s,a)=>s+(+a.balance||0),0));
+  const id=addLog({type:'cash',amount:tot,cashDelta:r2(tot-state.cash.amount),prevTs:state.cash.ts||0,label:'Bank balance from accounts'});
+  state.cash.set=true;state.cash.asOf=D.today();state.cash.ts=Date.now();return id;
+}
+/* the mailbox: purchases (Apple Pay) and app opens dropped by iPhone Shortcuts */
+function parseMoneyStr(s){let x=String(s??'').replace(/[^\d.,-]/g,'');if(/,\d{1,2}$/.test(x)&&!/\.\d{1,2}$/.test(x))x=x.replace(/\./g,'').replace(',','.');else x=x.replace(/,/g,'');return Math.abs(parseFloat(x)||0)}
+function cardFor(name){const n=plain(name);const cards=(state.debts||[]).filter(d=>d.kind==='card');
+  if(/\btd\b/.test(n))return (cards.find(d=>/\btd\b/i.test(d.name))||{}).id;if(/mbna|amazon/.test(n))return (cards.find(d=>/mbna|amazon/i.test(d.name))||{}).id;return null}
+const inboxDone=new Set();let pendingInbox=[];
+async function processInbox(docs){
+  if(!state||!docs.length)return;let bought=0,opens=0;const months=new Set(),useMonths=new Set();
+  for(const d of docs){
+    if(inboxDone.has(d.id))continue;inboxDone.add(d.id);
+    const x=d.data()||{},date=/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')?x.date:D.today(),time=/^\d{1,2}:\d{2}/.test(x.time||'')?x.time.padStart(5,'0'):'12:00';
+    if(x.type==='purchase'){
+      const amt=r2(parseMoneyStr(x.amount)),note=String(x.merchant||'Apple Pay').trim().slice(0,60);
+      if(amt>0&&!EXP.some(e=>Math.abs(e.amount-amt)<0.01&&Math.abs(D.diff(e.date,date))<=1&&(e.src==='applepay'||normNote(e.note)===normNote(note)))){
+        const ts=new Date(date+'T'+time).getTime()||Date.now(),g=guessExpense(note);
+        const e={id:'ap-'+d.id,ts,date,amount:amt,cat:g?g.cat:'other',note,via:cardFor(x.card||'')||'bank',src:'applepay'};
+        const m=date.slice(0,7),M=EXPM[m]=EXPM[m]||{items:[],rev:0};if(!M.items.some(i=>i.id===e.id)){M.items.push(e);months.add(m);bought++}}
+    }else if(x.type==='app'&&x.app){
+      const day=useDay(date),k=x.event==='close'?'closes':'opens';day[k]=day[k]||{};const arr=day[k][x.app]=day[k][x.app]||[];if(!arr.includes(time)){arr.push(time);arr.sort()}
+      useMonths.add(date.slice(0,7));opens++;
+    }
+  }
+  months.forEach(saveExpMonth);useMonths.forEach(saveUseMonth);
+  for(const d of docs){try{await expDb.doc('inbox/'+d.id).delete()}catch(e){}}
+  if(bought||opens){render();if(bought)toast(`Added ${bought} purchase${bought>1?'s':''} from Apple Pay`)}
+}
 function addExpense(e){const m=e.date.slice(0,7);const M=EXPM[m]=EXPM[m]||{items:[],rev:0};if(M.del)M.del=M.del.filter(x=>x!==e.id);M.items.push(e);saveExpMonth(m)}
 function removeExpense(id){for(const m in EXPM){const i=(EXPM[m].items||[]).findIndex(x=>x.id===id);if(i>=0){const x=EXPM[m].items.splice(i,1)[0];(EXPM[m].del=EXPM[m].del||[]).push(id);saveExpMonth(m);return x}}return null}
 
@@ -1235,7 +1353,9 @@ function mergeMonth(a,b){
 function makeGhDb(conf){
   const base=`https://api.github.com/repos/${encodeURIComponent(conf.owner)}/${encodeURIComponent(conf.repo)}/contents/`;
   const H={Authorization:'Bearer '+conf.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
-  const meta={},docL=new Map(),colL=[],colData=new Map();
+  const meta={},docL=new Map(),cols=new Map(); // cols: folder -> {ls:[listeners], data:Map(id->doc), etag}
+  const colOf=name=>{if(!cols.has(name))cols.set(name,{ls:[],data:new Map(),etag:null});return cols.get(name)};
+  const merger=name=>name==='expenses'||name==='usage'?(a,b)=>name==='expenses'?mergeMonth(a,b):mergeUsage(a,b):null;
   const fail=(status,msg)=>({code:!status||status>=500||status===409||status===429?'unavailable':'unauthorized',status,message:msg||('GitHub '+status)});
   const fileOf=p=>p+'.json';
   async function req(url,opt){let r;try{r=await fetch(url,{cache:'no-store',...opt,headers:{...H,...(opt&&opt.headers||{})}})}catch(e){throw fail(0,'offline')}return r}
@@ -1256,35 +1376,41 @@ function makeGhDb(conf){
   }
   const snap=(data)=>({exists:data!==undefined,data:()=>data,metadata:{fromCache:false,hasPendingWrites:false}});
   function emitDoc(path,data){(docL.get(path)||[]).forEach(f=>{try{f(snap(data))}catch(e){console.error(e)}})}
-  function emitCol(){const docs=[...colData.entries()].map(([id,d])=>({id,exists:true,data:()=>d}));colL.forEach(f=>{try{f({docs,size:docs.length,empty:!docs.length})}catch(e){console.error(e)}})}
+  function emitCol(name){const c=colOf(name),docs=[...c.data.entries()].map(([id,d])=>({id,exists:true,data:()=>d}));c.ls.forEach(f=>{try{f({docs,size:docs.length,empty:!docs.length})}catch(e){console.error(e)}})}
   async function refreshDoc(path,force){const g=await getFile(path,force);if(g.same)return;emitDoc(path,g.exists?g.data:undefined)}
-  let colEtag=null;
-  async function refreshCol(force){
-    const r=await req(base+'expenses',{headers:!force&&colEtag?{'If-None-Match':colEtag}:{}});
-    if(r.status===304)return;if(r.status===404){colEtag=null;emitCol();return}if(!r.ok)throw fail(r.status);
-    colEtag=r.headers.get('ETag');const list=(await r.json()).filter(f=>/\.json$/.test(f.name));let changed=false;
-    for(const f of list){const id=f.name.replace(/\.json$/,''),p='expenses/'+id;if(meta[p]&&meta[p].sha===f.sha&&colData.has(id))continue;
-      const g=await getFile(p,true);if(g.exists){colData.set(id,g.data);changed=true}}
-    if(changed||!colData.size)emitCol();
+  async function refreshCol(name,force){
+    const c=colOf(name),r=await req(base+name,{headers:!force&&c.etag?{'If-None-Match':c.etag}:{}});
+    if(r.status===304)return;if(r.status===404){c.etag=null;c.data.clear();emitCol(name);return}if(!r.ok)throw fail(r.status);
+    c.etag=r.headers.get('ETag');const list=(await r.json()).filter(f=>/\.json$/.test(f.name));let changed=false;const seen=new Set();
+    for(const f of list){const id=f.name.replace(/\.json$/,''),p=name+'/'+id;seen.add(id);if(meta[p]&&meta[p].sha===f.sha&&c.data.has(id))continue;
+      const g=await getFile(p,true);if(g.exists){c.data.set(id,g.data);changed=true}}
+    for(const id of [...c.data.keys()])if(!seen.has(id)){c.data.delete(id);changed=true}
+    if(changed||!c.data.size)emitCol(name);
   }
   let busy=false;
-  async function refreshAll(){if(busy||document.hidden)return;busy=true;try{for(const p of docL.keys())await refreshDoc(p);if(colL.length)await refreshCol()}catch(e){if(e.code==='unauthorized')setSync('auth');else if(e.code!=='unavailable')console.error(e)}busy=false}
+  async function refreshAll(){if(busy||document.hidden)return;busy=true;try{for(const p of docL.keys())await refreshDoc(p);for(const n of cols.keys())if(colOf(n).ls.length)await refreshCol(n)}catch(e){if(e.code==='unauthorized')setSync('auth');else if(e.code!=='unavailable')console.error(e)}busy=false}
   setInterval(refreshAll,45000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshAll()});window.addEventListener('online',refreshAll);
   return {
     kind:'github',
     doc(path){return {
       async set(data){
+        const [name,id]=path.split('/'),mg=merger(name);
         for(let attempt=0;attempt<3;attempt++){
-          const res=await putFile(path,data);if(res.ok){if(path.startsWith('expenses/'))colData.set(path.slice(9),data);return data}
+          const res=await putFile(path,data);if(res.ok){if(cols.has(name))colOf(name).data.set(id,data);return data}
           const g=await getFile(path,true);const remote=g.exists?g.data:null;
-          if(path.startsWith('expenses/')){if(remote){data=mergeMonth(data,remote);data.rev=Date.now()}}
+          if(mg){if(remote){data=mg(data,remote);data.rev=Date.now()}}
           else if(remote&&(+remote.rev||0)>(+data.rev||0)){emitDoc(path,remote);return remote} // the other device saved something newer
         }
         throw fail(409,'conflict');
       },
+      async delete(){
+        if(!meta[path]||!meta[path].sha){const g=await getFile(path,true);if(!g.exists)return}
+        const r=await req(base+fileOf(path),{method:'DELETE',body:JSON.stringify({message:'Remove '+path,sha:meta[path].sha}),headers:{'Content-Type':'application/json'}});
+        if(!r.ok&&r.status!==404)throw fail(r.status);meta[path]={};const [name,id]=path.split('/');if(cols.has(name))colOf(name).data.delete(id);
+      },
       onSnapshot(next,err){const a=docL.get(path)||[];a.push(next);docL.set(path,a);refreshDoc(path,true).catch(e=>{if(err)err(e)});return ()=>{}}
     }},
-    collection(path){return {onSnapshot(next,err){colL.push(next);refreshCol(true).catch(e=>{if(err)err(e)});return ()=>{}}}}
+    collection(name){return {onSnapshot(next,err){colOf(name).ls.push(next);refreshCol(name,true).catch(e=>{if(err)err(e)});return ()=>{}}}}
   };
 }
 async function ghTest(conf){
@@ -1306,7 +1432,7 @@ function normalize(s){
   s.cash=Object.assign({amount:0,asOf:s.startDate,set:false},s.cash||{});
   s.savings=s.savings||{amount:0};s.invest=s.invest||{amount:0};
   s.flows=s.flows||[];s.debts=s.debts||[];s.log=s.log||[];
-  s.habits=s.habits||[];s.habitLog=s.habitLog||{};s.weights=s.weights||[];s.sweeps=s.sweeps||{};
+  s.habits=s.habits||[];s.habitLog=s.habitLog||{};s.weights=s.weights||[];s.sweeps=s.sweeps||{};s.accounts=s.accounts||[];s.chat=s.chat||[];
   return s;
 }
 function setSync(s){
@@ -1343,6 +1469,7 @@ async function initStore(){
   const cached=lsGet();
   if(cached){try{state=normalize(JSON.parse(cached))}catch(e){}}
   try{const x=localStorage.getItem(LSX);if(x){EXPM=JSON.parse(x)||{};rebuildExp()}}catch(e){}
+  try{const x=localStorage.getItem(LSU);if(x)USEM=JSON.parse(x)||{}}catch(e){}
   let db=null;
   if(window.claude&&typeof window.claude.use==='function'){
     setSync('loading');render();
@@ -1351,6 +1478,15 @@ async function initStore(){
   if(!db&&!IS_ARTIFACT){const gc=ghConf();if(gc){db=makeGhDb(gc);setSync('loading')}}
   if(!db){mode='local';setSync('local');render();return}
   mode='db';dbRef=db.doc('budget/main');expDb=db;
+  db.collection('usage').onSnapshot(snap=>{
+    let changed=false;
+    for(const d of snap.docs){const data=d.data()||{},loc=USEM[d.id];if(useDirty[d.id]||useWriting[d.id])continue;
+      if(!loc||(+data.rev||0)>(+loc.rev||0)){USEM[d.id]=loc?mergeUsage(loc,data):JSON.parse(JSON.stringify({days:data.days||{},rev:+data.rev||0}));changed=true}
+      else if((+loc.rev||0)>(+data.rev||0)&&!readOnly){useDirty[d.id]=true;flushUse(d.id)}}
+    for(const m in USEM)if(!snap.docs.some(d=>d.id===m)&&Object.keys(USEM[m].days||{}).length&&!readOnly&&!useDirty[m]&&!useWriting[m]){useDirty[m]=true;flushUse(m)}
+    if(changed){try{localStorage.setItem(LSU,JSON.stringify(USEM))}catch(e){}useRev++;simCache=null;anaCache=null;slipCache=null;render()}
+  },()=>{});
+  db.collection('inbox').onSnapshot(snap=>{pendingInbox=snap.docs;processInbox(snap.docs)},()=>{});
   db.collection('expenses').onSnapshot(snap=>{
     let changed=false;
     for(const d of snap.docs){
@@ -1365,7 +1501,7 @@ async function initStore(){
   dbRef.onSnapshot(snap=>{
     if(snap.exists){
       const data=snap.data();const rv=+data.rev||0,mine=state?+state.rev||0:-1;
-      if(!state||rv>mine||(!dirty&&!writing&&rv!==mine&&!cachedNewer(rv,mine))){state=normalize(JSON.parse(JSON.stringify(data)));lsSet(JSON.stringify(state));simCache=null;render()}
+      if(!state||rv>mine||(!dirty&&!writing&&rv!==mine&&!cachedNewer(rv,mine))){const first=!state;state=normalize(JSON.parse(JSON.stringify(data)));lsSet(JSON.stringify(state));simCache=null;render();if(first&&pendingInbox.length)processInbox(pendingInbox)}
       else if(mine>rv&&!dirty&&!writing&&!readOnly){dirty=true;flush()}
       if(!dirty&&!writing&&!readOnly)setSync('synced');
     }else{
@@ -1470,6 +1606,7 @@ function viewToday(sim){
     <div class="hero-top"><span class="eyebrow">In your bank account</span><button type="button" class="hbtn" data-act="cash">Update</button></div>
     <div class="big">${S.cash.set?$m(cashNow(S)):'Set it'}</div>
     <div class="asof">${S.cash.set?'Last updated '+lbl(fmtMD,S.cash.asOf)+(S.cash.asOf<today?' · tap Update if it changed':''):'Enter your balance so the plan uses your real numbers.'}</div>
+    ${(S.accounts||[]).length?`<div class="asof">${S.accounts.map(a=>esc(a.name)+' '+$m(a.balance)).join(' · ')}</div>`:''}
     ${move}</section>`;
   // journey
   const sv=+S.savings.amount||0,iv=+S.invest.amount||0,goal=+S.settings.savingsGoal||0;
@@ -1630,6 +1767,8 @@ function viewSetup(){
       <label class="fld"><span>Savings right now</span><input id="set-sav" data-set="savings" type="number" inputmode="decimal" min="0" step="0.01" value="${S.savings.amount}"></label>
       <label class="fld"><span>Invested right now</span><input id="set-inv" data-set="invest" type="number" inputmode="decimal" min="0" step="0.01" value="${S.invest.amount}"></label>
     </div></section>
+    <section class="card"><div class="card-h"><h2>iPhone automations</h2></div><p class="small muted" style="margin:0 0 10px">Log Apple Pay purchases and app opens (Instagram, gambling apps…) automatically, with no typing. A one-time 5-minute setup in the Shortcuts app.</p>
+      <button type="button" class="btn sm" data-act="auto-guide">Show me how</button></section>
     <section class="card"><div class="card-h"><h2>Phone reminders</h2></div><p class="small muted" style="margin:0 0 10px">Put rent, card minimums and other due dates in your iPhone Calendar, with an alert the day before.</p>
       <button type="button" class="btn sm" data-act="calendar">Add to iPhone Calendar</button></section>
     <section class="card"><div class="card-h"><h2>Statements</h2></div><p class="small muted" style="margin:0 0 10px">Import a PDF or CSV statement from TD, MBNA or your bank. Purchases go into your spending history and card balances update.</p>
@@ -2247,7 +2386,7 @@ function viewHabits(){
   const allDone=H.length&&H.every(h=>stats[h.id].today!==undefined);
   const today=`<section class="card"><div class="card-h"><h2>${lbl(fmtDay,t)}</h2>${H.length&&!allDone?`<button type="button" class="btn sm accent" data-act="hab-all">All clean today</button>`:''}</div>
     ${H.length?`<div class="habs">${H.map(h=>{const s=stats[h.id];return `<div class="hab">${ring(s.prog,s.streak,s.today===1)}
-      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?'Slipped today. Tomorrow is day 1.':s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}</small></div>
+      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?'Slipped today. Tomorrow is day 1.':s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}</small>${s.today===undefined?(()=>{const l=linkedLabel(habitKey(h),usageOn(t));return l?`<em class="uhint">${esc(l)}</em>`:''})():''}</div>
       <div class="hbtns" role="group" aria-label="${esc(h.name)} today"><button type="button" class="hb ok" data-act="hab" data-id="${esc(h.id)}" data-v="1" aria-pressed="${s.today===1}" aria-label="Clean today">✓</button><button type="button" class="hb no" data-act="hab" data-id="${esc(h.id)}" data-v="0" aria-pressed="${s.today===0}" aria-label="Slipped today">✗</button></div></div>`}).join('')}</div>`
       :`<div class="empty">Add the habits you want to quit or build.</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:8px"><button type="button" class="btn sm ghost" data-act="habits-edit" style="padding-left:0">${H.length?'Edit habits':'+ Add habits'}</button>
@@ -2279,7 +2418,7 @@ function viewHabits(){
       <div class="wlist">${W.slice(-4).reverse().map(w=>`<button type="button" class="xrow" data-act="weight-edit" data-id="${esc(w.id)}"><i style="background:var(--invest)"></i><div class="xn">${lbl(fmtDay,w.date)}</div><div class="xa">${wFmt(w.kg)} ${u}</div></button>`).join('')}</div>`
       :`<div class="empty">Log your weight now and then (once a week is plenty). The trend line smooths out daily ups and downs.</div>`}
     </section>`;
-  return `<div class="cols"><div class="stack">${riskCard()}${today}${streakOddsCard()}${cal}</div><div class="stack">${patternsCard()}${weight}</div></div>`;
+  return `<div class="cols"><div class="stack">${riskCard()}${today}${streakOddsCard()}${cal}</div><div class="stack">${patternsCard()}${usageCard()}${weight}</div></div>`;
 }
 function drawWeight(){const el=$('#wchart');if(!el)return;const t=D.today(),from=wRange==='1m'?D.add(t,-31):wRange==='3m'?D.add(t,-92):wRange==='1y'?D.add(t,-366):'0000';
   const ws=state.weights.slice().sort((a,b)=>a.date<b.date?-1:1).filter(w=>w.date>=from);el.innerHTML=ws.length>1?weightChart(ws,Math.max(260,Math.round(el.clientWidth||520))):'<p class="hint">Not enough weigh-ins in this range.</p>'}
@@ -2571,25 +2710,212 @@ function weightInsight(){
     const rho=1-6*ra.reduce((s,v,i)=>s+(v-rb[i])**2,0)/(n*(n*n-1));if(rho>=0.5)rel=' Weeks you eat out more, your weight tends to go up.';else if(rho<=-0.5)rel=' Interesting: weeks you eat out more, your weight tends to go down.'}
   return `<p class="small" style="margin:10px 0 0">Trend: ${dir}${dir!=='holding steady'?` about ${(Math.round(wShow(Math.abs(P.perWeek))*10)/10).toFixed(1)} ${u} a week`:''}. ${goal}${rel}</p>`;
 }
+/* ---------- Claude tab: chat + screenshots (claude.ai version) ---------- */
+let chatFiles=[],chatBusy=false;
+const CHAT_SUGG=['Why is November tight?','How do I get debt-free faster?','What should I watch this week?','Where did my money go this month?'];
+function bubbleHTML(m){
+  const body=m.text?esc(m.text):'';
+  const btn=m.data&&m.data.screens&&!m.applied?`<button type="button" class="btn sm accent" data-act="chat-review" data-id="${esc(m.id)}">Review &amp; add</button>`:m.applied?'<span class="pill good">Added</span>':'';
+  return `<div class="msg ${m.role}" id="m-${esc(m.id)}"><div class="bub">${body}${btn?`<div style="margin-top:8px">${btn}</div>`:''}</div></div>`;
+}
+function viewClaude(){
+  const msgs=(state.chat||[]).slice(-40);
+  return `<div class="cols"><div class="stack"><section class="card chatcard">
+    <div class="card-h"><h2>Claude</h2>${msgs.length?'<button type="button" class="btn sm ghost" data-act="chat-clear">Clear chat</button>':'<span class="sub">Ask anything, or add screenshots</span>'}</div>
+    <div class="thread" id="thread">${msgs.length?msgs.map(bubbleHTML).join(''):`<div class="hello"><p>Ask me anything about your money, debts or habits. I can see your whole plan.</p>
+      <p>Or add <b>screenshots</b> from TD, KOHO, MBNA, Screen Time or your browser history. I'll read the transactions, balances and usage, and you choose what to add. Nothing gets added twice.</p>
+      <div class="chips">${CHAT_SUGG.map(s=>`<button type="button" class="chip-btn" data-act="chat-sugg" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`}</div>
+    <div class="files">${chatFiles.map((f,i)=>`<span class="fchip">${esc(f.name.length>22?f.name.slice(0,20)+'…':f.name)}<button type="button" data-act="chat-unfile" data-i="${i}" aria-label="Remove">×</button></span>`).join('')}</div>
+    <form class="composer" id="composer"><button type="button" class="attach" data-act="chat-attach" aria-label="Add screenshots" title="Add screenshots">+</button>
+      <textarea id="chat-in" rows="1" placeholder="${chatFiles.length?'Add a note, or just send':'Message Claude'}"></textarea><button type="submit" class="send" aria-label="Send"${chatBusy?' disabled':''}>↑</button></form>
+    <p class="hint" style="margin:6px 0 0">Claude can make mistakes, so you review everything before it's added. Not financial advice.</p></section></div>
+    <div class="stack"><section class="card"><div class="card-h"><h2>What I can read</h2></div>
+      <div class="sumline"><span>Bank and card apps (TD, KOHO, MBNA)</span><span class="muted">transactions, balances</span></div>
+      <div class="sumline"><span>Screen Time (Settings → Screen Time)</span><span class="muted">app minutes, pickups</span></div>
+      <div class="sumline"><span>Safari or Chrome history</span><span class="muted">visits by type</span></div>
+      <p class="hint" style="margin:8px 0 0">Usage data feeds your habit predictions and patterns. Adult sites are only counted by type, never by name. It all stays private in your app.</p></section></div></div>`;
+}
+function chatAttach(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=()=>{chatFiles=chatFiles.concat([...inp.files]).slice(0,12);render();setTimeout(()=>{const t=$('#chat-in');if(t)t.focus()},50)};inp.click()}
+function chatPush(m){state.chat=(state.chat||[]).concat(m).slice(-40)}
+function chatData(){
+  const d=coachData(),t=D.today(),days=[];for(let i=0;i<7;i++){const x=D.add(t,-i),u=usageOn(x);if(u)days.push({date:x,screen_minutes:u.total||null,top_apps:u.apps?Object.entries(u.apps).sort((a,b)=>b[1]-a[1]).slice(0,4):null,app_opens:u.opens?Object.fromEntries(Object.entries(u.opens).map(([k,v])=>[k,v.length])):null,visits:u.visits||null})}
+  return {...d,bank_accounts:(state.accounts||[]).map(a=>({name:a.name,balance:a.balance,as_of:a.asOf})),usage_last_7_days:days};
+}
+async function sendChat(){
+  if(chatBusy)return;const inp=$('#chat-in'),text=(inp&&inp.value||'').trim(),files=chatFiles.slice();if(!text&&!files.length)return;
+  const sample=IS_ARTIFACT?await window.claude.use('sample'):null;if(!sample){toast("Claude isn't available here");return}
+  chatBusy=true;chatFiles=[];
+  chatPush({id:uid(),role:'user',text:text||(files.length+' screenshot'+(files.length>1?'s':'')),at:D.today()});
+  const aid=uid();chatPush({id:aid,role:'assistant',text:'',at:D.today()});render();
+  const bub=()=>document.querySelector('#m-'+aid+' .bub'),scroll=()=>{const th=$('#thread');if(th)th.scrollTop=th.scrollHeight};scroll();
+  const setMsg=(patch)=>{const m=(state.chat||[]).find(x=>x.id===aid);if(m)Object.assign(m,patch)};
+  try{
+    if(files.length){
+      const lim=await sample.limits().catch(()=>null);if(!lim||!lim.images)throw {code:'images_unavailable'};
+      const b=bub();if(b)b.innerHTML='<span class="muted">Reading your screenshots…</span>';
+      const screens=[],per=Math.max(1,lim.images.maxCount||4);
+      for(let i=0;i<files.length;i+=per){const j=await sample.json(extractPrompt(text),{images:files.slice(i,i+per)});if(j&&Array.isArray(j.screens))screens.push(...j.screens)}
+      setMsg({text:summarizeScreens(screens),data:{screens}});
+    }else{
+      const hist=(state.chat||[]).filter(m=>m.id!==aid&&m.text).slice(-13,-1).map(m=>({role:m.role,content:m.text}));
+      const turns=[{role:'user',content:chatRules()+'\n\nDATA (current):\n'+JSON.stringify(chatData())},...hist,{role:'user',content:text}];
+      const b=bub();if(b)b.innerHTML='<span class="muted">Thinking…</span>';
+      const {text:ans}=await sample(turns,{cache:false,onText:({text})=>{const b2=bub();if(b2){b2.textContent=text;scroll()}}});
+      setMsg({text:ans.trim()});
+    }
+  }catch(e){
+    const c=e&&e.code;setMsg({text:(e&&e.text)||(c==='not_granted'?'Claude was not allowed for this page. You can allow it from the artifact\'s permissions.':c==='images_unavailable'?'Screenshots aren\'t available in this view.':c==='rate_limited'?'Too many requests right now. Try again in a bit.':c==='invalid_json'?'I couldn\'t read those screenshots clearly. Try sharper or fewer screenshots.':'Something went wrong. Try again.')});
+  }
+  chatBusy=false;commit();setTimeout(scroll,60);
+}
+function chatRules(){return `You are Claude, inside the user's personal app "Payoff Path". The user is a university student in Montreal paying off debt (credit cards, family loans, school fees), keeping a weekly spending budget, and quitting some habits. Below is their live data from the app. Answer their questions using it: specific, practical, warm and brief (usually 2 to 6 sentences, plain text, no markdown headings). If they ask about something the data can't show, say so. Never shame them about habits. You can explain options and math, but don't give personalized investment advice. If they want to change something in the app, tell them where to tap.`}
+function extractPrompt(note){return `You read screenshots from a person's phone so their budgeting app can import them. Today is ${D.today()}. Dates without a year are in the last 12 months: choose the year that puts the date on or before today.
+Reply with only one JSON object: {"screens":[ ... one object per screenshot ... ]}. Each object:
+- "kind": "bank_account" | "credit_card" | "screen_time" | "browser_history" | "other"
+- "institution": like "KOHO", "TD", "MBNA", or null
+- "account_name": like "Cash Back Visa" or "Chequing", or null
+- "balance": the current balance shown as a positive number (for a credit card, the amount owed), or null
+- "transactions": [{"date":"YYYY-MM-DD","description":"merchant or description","amount":12.34,"direction":"out" or "in","pending":true or false}]. Money spent or charged is "out"; deposits, refunds and payments to a card are "in". Use [] if none.
+- "screen_time": only for Screen Time screenshots, else null: {"period":"day" or "week","date":"YYYY-MM-DD" (the day shown, or the first day of the week shown),"total_minutes":number,"pickups":number or null,"apps":[{"name":"Instagram","minutes":number}]}
+- "history": only for browser history, else []: [{"date":"YYYY-MM-DD","time":"HH:MM" or null,"category":"adult" | "social" | "gambling" | "shopping" | "video" | "news" | "other","site":"domain.com" or null}]. For adult sites set "site" to null and never write page titles.
+Convert durations like "1h 5m" to minutes. Skip anything you can't read clearly, and never invent transactions.${note?`\nThe person wrote: ${note}`:''}`}
+function summarizeScreens(S){
+  if(!S.length)return "I couldn't find anything I can import in those screenshots.";
+  const parts=[];let tx=0,newTx=0;
+  for(const s of S){
+    if(s.balance!=null&&(s.kind==='bank_account'||s.kind==='credit_card'))parts.push(`${s.institution||'Account'}${s.account_name?' '+s.account_name:''}: ${s.kind==='credit_card'?'owing ':''}${$m(s.balance)}`);
+    for(const x of s.transactions||[]){tx++;if(!txDup(x))newTx++}
+    if(s.screen_time)parts.push(`Screen Time ${s.screen_time.period==='week'?'week of ':''}${s.screen_time.date?lbl(fmtMD,s.screen_time.date):''}: ${Math.floor((s.screen_time.total_minutes||0)/60)}h ${Math.round((s.screen_time.total_minutes||0)%60)}m`);
+    if(s.history&&s.history.length)parts.push(`${s.history.length} history entries`);
+  }
+  if(tx)parts.push(`${tx} transaction${tx>1?'s':''} (${newTx} new)`);
+  return `I read ${S.length} screenshot${S.length>1?'s':''}: ${parts.join(' · ')||'nothing to import'}. Tap Review & add to choose what goes in.`;
+}
+const txDup=x=>EXP.some(e=>Math.abs(e.amount-Math.abs(+x.amount||0))<0.01&&x.date&&Math.abs(D.diff(e.date,x.date))<=1);
+function reviewScreens(msgId){
+  const m=(state.chat||[]).find(x=>x.id===msgId);if(!m||!m.data)return;const S=m.data.screens||[],cards=state.debts.filter(d=>d.kind==='card');
+  const accRows=[],txRows=[],useRows=[];
+  S.forEach((s,i)=>{
+    if(s.balance!=null&&s.kind==='credit_card'){const guess=cardFor((s.institution||'')+' '+(s.account_name||''));
+      accRows.push(`<div class="improw"><input type="checkbox" name="a${i}" checked><div class="xn">Update card balance<small>${esc(s.institution||'')} ${esc(s.account_name||'')} · owing ${$m(s.balance)}</small></div><div class="xa"></div>
+        <select name="ac${i}" aria-label="Which card">${cards.map(d=>`<option value="${esc(d.id)}"${d.id===guess?' selected':''}>${esc(d.name)}</option>`).join('')}</select></div>`)}
+    else if(s.balance!=null&&s.kind==='bank_account')accRows.push(`<div class="improw"><input type="checkbox" name="a${i}" checked><div class="xn">Update account balance<small>${$m(s.balance)}</small></div><div class="xa"></div><input name="an${i}" value="${esc([s.institution,s.account_name].filter(Boolean).join(' ')||'Bank account')}" aria-label="Account name" style="grid-area:s;font-size:15px;padding:6px 10px"></div>`);
+    (s.transactions||[]).forEach((x,j)=>{const amt=Math.abs(+x.amount||0);if(!amt||!x.date)return;const dup=txDup(x),inn=x.direction==='in',g=guessExpense(x.description||''),on=!dup&&!inn;
+      txRows.push(`<div class="improw${on?'':' off'}"><input type="checkbox" name="t${i}_${j}"${on?' checked':''}><div class="xn">${esc(x.description||'(no description)')}<small>${lbl(fmtMD,x.date)}${inn?' · money in':''}${x.pending?' · pending':''}${dup?' · already in app':''}</small></div>
+        <select name="c${i}_${j}" aria-label="Category">${CATS.map(c=>`<option value="${c.id}"${c.id===(g?g.cat:'other')?' selected':''}>${c.name}</option>`).join('')}</select><div class="xa">${$m(amt)}</div></div>`)});
+    if(s.screen_time)useRows.push(`<label class="check"><input type="checkbox" name="st${i}" checked><span>Save Screen Time ${s.screen_time.period==='week'?'(week, saved as a daily average) ':''}for ${lbl(fmtMD,s.screen_time.date||D.today())}: ${Math.round(s.screen_time.total_minutes||0)} min${(s.screen_time.apps||[]).length?' · '+s.screen_time.apps.slice(0,3).map(a=>esc(a.name)+' '+Math.round(a.minutes)+'m').join(', '):''}</span></label>`);
+    if(s.history&&s.history.length){const by={};for(const h of s.history)by[h.category||'other']=(by[h.category||'other']||0)+1;
+      useRows.push(`<label class="check"><input type="checkbox" name="hi${i}" checked><span>Save browsing summary: ${Object.entries(by).map(([k,v])=>v+' '+k).join(', ')}</span></label>`)}
+  });
+  openSheet({title:'Review & add',lead:'Untick anything you don\'t want. Duplicates are already unticked.',
+    body:`${accRows.length?`<div class="fld"><span>Balances</span><div class="implist">${accRows.join('')}</div></div>`:''}
+      ${txRows.length?`<div class="fld"><span>Transactions</span><div class="implist">${txRows.join('')}</div></div>`:''}
+      ${useRows.length?`<div class="fld"><span>Phone and browsing</span>${useRows.join('')}</div>`:''}
+      ${!accRows.length&&!txRows.length&&!useRows.length?'<p class="small muted">Nothing to add from these screenshots.</p>':''}`,
+    submit:'Add to my app',
+    onMount:f=>f.querySelectorAll('.improw input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>cb.closest('.improw').classList.toggle('off',!cb.checked))),
+    onSubmit:fd=>{
+      let nTx=0,bankUpd=false;const balUpd=new Set(),months=new Set(),umonths=new Set();
+      S.forEach((s,i)=>{if(fd.get('a'+i)!=='on'||s.balance==null)return;balUpd.add(i);
+        if(s.kind==='credit_card'){const d=debtById(fd.get('ac'+i));if(d){d.balance=r2(s.balance);d.asOfTs=Date.now();delete d.asOfDate;if(s.balance>debtStart(d))d.start=r2(s.balance)}}
+        else{setAccountBalance(String(fd.get('an'+i)||s.institution||'Bank account'),s.balance);bankUpd=true}});
+      if(bankUpd)cashFromAccounts();
+      S.forEach((s,i)=>{(s.transactions||[]).forEach((x,j)=>{if(fd.get(`t${i}_${j}`)!=='on')return;const amt=r2(Math.abs(+x.amount||0));if(!amt||!x.date)return;
+        const via=s.kind==='credit_card'?(fd.get('ac'+i)||cardFor((s.institution||'')+' '+(s.account_name||''))||'bank'):'bank';
+        const e={id:uid(),ts:new Date(x.date+'T12:00').getTime(),date:x.date,amount:amt,cat:fd.get(`c${i}_${j}`)||'other',note:String(x.description||'').slice(0,60),via,src:'screenshot'};
+        if(balUpd.has(i))e.imp=true; // the balance we just took from this screenshot already includes it
+        const mo=x.date.slice(0,7),M=EXPM[mo]=EXPM[mo]||{items:[],rev:0};M.items.push(e);months.add(mo);nTx++})});
+      S.forEach((s,i)=>{
+        if(s.screen_time&&fd.get('st'+i)==='on'){const st=s.screen_time,d0=st.date||D.today(),week=st.period==='week',n=week?7:1;
+          for(let k=0;k<n;k++){const d=D.add(d0,k);if(d>D.today())break;const day=useDay(d);if(week&&day.src==='screentime')continue;
+            day.total=Math.round((+st.total_minutes||0)/(week?7:1));if(st.pickups!=null)day.pickups=Math.round(+st.pickups/(week?7:1));
+            day.apps={};for(const a of st.apps||[])if(a&&a.name)day.apps[a.name]=Math.round((+a.minutes||0)/(week?7:1));day.src=week?'screentime-week':'screentime';umonths.add(d.slice(0,7))}}
+        if(s.history&&s.history.length&&fd.get('hi'+i)==='on'){const by={};for(const h of s.history){const d=/^\d{4}-\d{2}-\d{2}$/.test(h.date||'')?h.date:D.today();(by[d]=by[d]||{})[h.category||'other']=((by[d]||{})[h.category||'other']||0)+1}
+          for(const [d,c] of Object.entries(by)){const day=useDay(d);day.visits=day.visits||{};for(const [k,v] of Object.entries(c))day.visits[k]=Math.max(day.visits[k]||0,v);umonths.add(d.slice(0,7))}}});
+      months.forEach(saveExpMonth);umonths.forEach(saveUseMonth);
+      m.applied=true;commit([nTx?`Added ${nTx} transaction${nTx>1?'s':''}`:'',balUpd.size?'balances updated':'',umonths.size?'usage saved':''].filter(Boolean).join(' · ')||'Saved');
+    }});
+}
+/* ---------- usage: how habits link to apps and sites ---------- */
+function habitKey(h){const n=plain(h.name);
+  for(const a of ['instagram','tiktok','snapchat','youtube','reddit','facebook','twitter','netflix','twitch'])if(n.includes(a))return a;
+  if(/gambl|casino|\bbet|poker|stake/.test(n))return 'gambling';if(/porn|masturb|fap|adult/.test(n))return 'adult';return null}
+const GAMBLE_RE=/stake|bet|casino|poker|mise|loto|lotto|draftkings|fanduel|bet365|pokerstars|sportsbook|roulette|slots/i;
+function linkedMin(key,u){
+  if(!key||!u)return 0;let m=0;
+  if(key==='gambling'){for(const [n,x] of Object.entries(u.apps||{}))if(GAMBLE_RE.test(n))m+=x;for(const [n,t] of Object.entries(u.opens||{}))if(GAMBLE_RE.test(n))m+=t.length*6;m+=((u.visits||{}).gambling||0)*8}
+  else if(key==='adult')m+=((u.visits||{}).adult||0)*10;
+  else{let mins=0;for(const [n,x] of Object.entries(u.apps||{}))if(plain(n).includes(key))mins+=x;let op=0;for(const [n,t] of Object.entries(u.opens||{}))if(plain(n).includes(key))op+=t.length;m=mins||op*5}
+  return m;
+}
+function linkedLabel(key,u){if(!key||!u)return '';const op=Object.entries(u.opens||{}).filter(([n])=>key==='gambling'?GAMBLE_RE.test(n):plain(n).includes(key)).reduce((s,[,t])=>s+t.length,0);
+  if(key==='adult'){const v=(u.visits||{}).adult||0;return v?`${v} adult-site visit${v>1?'s':''} logged today`:''}
+  const mins=Object.entries(u.apps||{}).filter(([n])=>key==='gambling'?GAMBLE_RE.test(n):plain(n).includes(key)).reduce((s,[,x])=>s+x,0);
+  return mins?`${Math.round(mins)} min on ${key==='gambling'?'gambling apps':key[0].toUpperCase()+key.slice(1)} today`:op?`${key==='gambling'?'Gambling app':key[0].toUpperCase()+key.slice(1)} opened ${op}× today`:''}
+function usageCard(){
+  const t=D.today();
+  if(!hasUsage())return `<section class="card"><div class="card-h"><h2>Phone &amp; browsing</h2></div><p class="small muted" style="margin:0">No usage data yet. ${IS_ARTIFACT?'Add a Screen Time or browser history screenshot in the Claude tab, or ':''}set up the iPhone automation in Setup → iPhone automations to log app opens automatically. It makes your habit predictions sharper.</p></section>`;
+  const days=[];for(let i=6;i>=0;i--){const d=D.add(t,-i);days.push({d,u:usageOn(d)})}
+  const maxT=Math.max(30,...days.map(x=>x.u&&x.u.total||0)),apps={},opens={};let adult=0;
+  for(const {u} of days){if(!u)continue;for(const [n,x] of Object.entries(u.apps||{}))apps[n]=(apps[n]||0)+x;for(const [n,ts] of Object.entries(u.opens||{}))opens[n]=(opens[n]||0)+ts.length;adult+=(u.visits||{}).adult||0}
+  const top=Object.entries(apps).sort((a,b)=>b[1]-a[1]).slice(0,5),op=Object.entries(opens).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return `<section class="card"><div class="card-h"><h2>Phone &amp; browsing</h2><span class="sub">Last 7 days</span></div>
+    <div class="ubars">${days.map(({d,u})=>`<div title="${lbl(fmtDay,d)}${u&&u.total?': '+u.total+' min':''}"><i style="height:${u&&u.total?Math.max(4,u.total/maxT*100):0}%"></i><span>${fmtWd.format(D.parse(d))[0]}</span></div>`).join('')}</div>
+    ${top.length?`<div class="fld" style="margin-top:10px"><span>Most used (minutes)</span>${top.map(([n,x])=>`<div class="sumline"><span>${esc(n)}</span><b>${Math.round(x)}</b></div>`).join('')}</div>`:''}
+    ${op.length?`<div class="fld" style="margin-top:10px"><span>App opens (iPhone automation)</span>${op.map(([n,x])=>`<div class="sumline"><span>${esc(n)}</span><b>${x}×</b></div>`).join('')}</div>`:''}
+    ${adult?`<div class="sumline"><span>Adult-site visits</span><b>${adult}</b></div>`:''}</section>`;
+}
+/* ---------- guide: iPhone Shortcuts that drop purchases and app opens into the private mailbox ---------- */
+const INBOX_URL='https://api.github.com/repos/KareemJandali/payoff-path-data/contents/inbox/';
+function autoGuide(){
+  const purchase='{"type":"purchase","date":"[Day]","time":"[Time]","merchant":"[Merchant]","amount":"[Amount]","card":"[Card]"}';
+  const app='{"type":"app","date":"[Day]","time":"[Time]","app":"Instagram","event":"open"}';
+  const copyBtn=(v,l)=>`<button type="button" class="btn sm" data-act="copy" data-v="${esc(v)}">${l}</button>`;
+  openSheet({title:'iPhone automations',lead:`Each Apple Pay tap and app open drops a tiny note in your private mailbox. ${IS_ARTIFACT?'Claude moves them into your app at 12:30, 5:30 and 9:40 PM.':'The app picks them up as soon as it opens.'}`,
+    body:`<div class="guide">
+      <h4>1 · Make a mailbox key (once)</h4>
+      <ol><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+        <li>Name: <b>Payoff Path iPhone</b> · Expiration: the longest offered.</li>
+        <li>Repository access: <b>Only select repositories → payoff-path-data</b>.</li>
+        <li>Permissions → Contents: <b>Read and write</b>. Generate, then copy the token.</li></ol>
+      <h4>2 · Apple Pay purchases</h4>
+      <ol><li>Shortcuts app → <b>Automation</b> → <b>+</b> → <b>Transaction</b>. Pick your <b>KOHO</b> card (and any others) → <b>When I Tap</b> → <b>Run Immediately</b> → Next → <b>New Blank Automation</b>.</li>
+        <li>Add <b>Format Date</b> (Current Date, Custom: <code>yyyy-MM-dd</code>). Add another (Custom: <code>HH:mm</code>) and a third (Custom: <code>yyyyMMdd-HHmmss</code>).</li>
+        <li>Add <b>Text</b> and paste this, then replace each [bracket] by tapping the variable: [Day], [Time] from the first two dates, and [Merchant], [Amount], [Card] from <b>Shortcut Input</b>.<div class="code">${esc(purchase)}</div>${copyBtn(purchase,'Copy text')}</li>
+        <li>Add <b>Base64 Encode</b> (Line Breaks: None).</li>
+        <li>Add <b>Get Contents of URL</b>: paste the address below and add the third date at the end, then <code>.json</code>.<div class="code">${INBOX_URL}</div>${copyBtn(INBOX_URL,'Copy address')}
+          Method <b>PUT</b>. Headers: <code>Authorization</code> = <code>Bearer</code> + space + your token, and <code>Accept</code> = <code>application/vnd.github+json</code>. Request Body <b>JSON</b>: <code>message</code> = <code>purchase</code>, <code>content</code> = <b>Base64 Encoded</b>.</li>
+        <li>Done. Your next tap logs itself.</li></ol>
+      <h4>3 · App opens (optional, for habits)</h4>
+      <ol><li>Automation → <b>+</b> → <b>App</b> → choose <b>Instagram</b> → <b>Is Opened</b> → Run Immediately.</li>
+        <li>Same steps as above, but use this text (change the app name for each app):<div class="code">${esc(app)}</div>${copyBtn(app,'Copy text')}</li>
+        <li>Repeat for any gambling apps. For time spent, also add an <b>Is Closed</b> automation with <code>"event":"close"</code>.</li></ol>
+      <p class="hint">Apple doesn't let any app read Screen Time totals. For minutes per app, drop a Screen Time screenshot in the Claude tab once in a while.</p></div>`,
+    submit:'Done',noCancel:true,noFocus:true,onSubmit:()=>{}});
+}
 function emptyView(){
   if(!IS_ARTIFACT&&!ghConf())return `<section class="card" style="max-width:560px"><h2 style="font-size:22px">Welcome to Payoff Path</h2><p class="muted">Already using it on another device? Turn on sync and your plan, debts, spending and habits load here.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" data-act="sync">Turn on sync</button><button type="button" class="btn" data-act="restore">Restore a backup</button><button type="button" class="btn ghost" data-act="blank">Start fresh</button></div></section>`;
   return `<section class="card" style="max-width:560px"><h2 style="font-size:22px">No plan yet</h2><p class="muted">Your income, bills and debts will show up here once they're added. Start a blank plan and add them in Setup and Debts.</p>
     <button type="button" class="btn primary" data-act="blank">Start a blank plan</button></section>`;
 }
-const TITLES={today:'Today',spending:'Spending',plan:'Your plan',debts:'Debts',habits:'Habits',setup:'Setup'};
+const TITLES={today:'Today',spending:'Spending',plan:'Your plan',debts:'Debts',habits:'Habits',claude:'Claude',setup:'Setup'};
 function render(){
-  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false'));
+  if(tab==='claude'&&!IS_ARTIFACT)tab='today';
+  document.querySelectorAll('.tab').forEach(b=>{b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');if(b.dataset.tab==='claude')b.hidden=!IS_ARTIFACT});
+  const gr=$('.gear');if(gr)gr.setAttribute('aria-current',tab==='setup'?'page':'false');
   $('#title').textContent=TITLES[tab];
   $('#today-label').textContent=fmtMDY.format(D.parse(D.today()));
   const V=$('#views');
-  $('#fab').hidden=!state||tab==='habits';
+  $('#fab').hidden=!state||tab==='habits'||tab==='claude';
   if(!state){V.innerHTML=mode==='loading'?'<div class="loading">Loading your plan…</div>':emptyView();return}
   const sim=getSim();
-  V.innerHTML=tab==='habits'?viewHabits():tab==='spending'?viewSpending():tab==='plan'?viewPlan(sim):tab==='debts'?viewDebts(sim):tab==='setup'?viewSetup():viewToday(sim);
+  V.innerHTML=tab==='claude'?viewClaude():tab==='habits'?viewHabits():tab==='spending'?viewSpending():tab==='plan'?viewPlan(sim):tab==='debts'?viewDebts(sim):tab==='setup'?viewSetup():viewToday(sim);
   if(tab==='plan'){drawChart();drawOutlook();drawFan()}
   if(tab==='today')runTicker();
   if(tab==='habits')drawWeight();
+  if(tab==='claude'){const th=$('#thread');if(th)th.scrollTop=th.scrollHeight}
   setTimeout(checkMilestones,0);
 }
 function drawChart(){const el=$('#chart');if(!el||!state)return;el.innerHTML=chartSVG(getSim().main,Math.max(280,Math.round(el.clientWidth||600)))}
@@ -2611,6 +2937,10 @@ function openSheet(o){
 }
 function closeSheet(){$('#sheet').hidden=true;$('#sheet-form').innerHTML='';sheetSubmit=null}
 $('#sheet-form').addEventListener('submit',e=>{e.preventDefault();if(sheetSubmit&&sheetSubmit(new FormData(e.target),e.target)!==false)closeSheet()});
+// chat composer: submit sends; on a computer, Enter sends and Shift+Enter makes a new line
+document.addEventListener('submit',e=>{if(e.target&&e.target.id==='composer'){e.preventDefault();sendChat()}});
+document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='chat-in'&&e.key==='Enter'&&!e.shiftKey&&matchMedia('(hover:hover)').matches){e.preventDefault();sendChat()}});
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='chat-in'){e.target.style.height='auto';e.target.style.height=Math.min(140,e.target.scrollHeight)+'px'}});
 $('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#celebrate').hidden){$('#celebrate').hidden=true;celebrating=false}else if(!$('#sheet').hidden)closeSheet()});
 let toastT=null;
@@ -2920,6 +3250,13 @@ document.addEventListener('click',e=>{
   if(act==='cash')return cashSheet();
   if(act==='pay')return paySheet(id);
   if(act==='oneoff')return oneOffSheet();
+  if(act==='auto-guide')return autoGuide();
+  if(act==='copy'){const v=a.dataset.v;try{navigator.clipboard.writeText(v).then(()=>toast('Copied'),()=>toast('Press and hold to copy'))}catch(e){toast('Press and hold to copy')}return}
+  if(act==='chat-attach')return chatAttach();
+  if(act==='chat-unfile'){chatFiles.splice(+a.dataset.i,1);render();return}
+  if(act==='chat-sugg'){const t=$('#chat-in');if(t){t.value=a.dataset.v;sendChat()}return}
+  if(act==='chat-review')return reviewScreens(id);
+  if(act==='chat-clear'){state.chat=[];commit('Chat cleared');return}
   if(act==='goal-set')return goalSheet();
   if(act==='tip-budget')return runTip({act:'set-budget',v:+a.dataset.v});
   if(act==='coach')return runCoach(a);
