@@ -555,7 +555,11 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
 .plans{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
 .plans li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;background:var(--invest-soft);border-radius:12px;padding:9px 12px;font-size:14px;line-height:1.4}
 .plans li .x{border:0;background:none;color:var(--ink-3);font-size:20px;line-height:1;padding:0 4px}
-.urgebtn{width:100%;margin-top:12px;padding:13px;font-size:16px;border-radius:14px;background:var(--invest);border-color:var(--invest);color:#fff}
+.urgebtn{width:100%;padding:13px;font-size:16px;border-radius:14px;background:var(--invest);border-color:var(--invest);color:#fff}
+.urgebox{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:10px}
+.urgebox b{display:block;font-size:15px}
+.urgebox small{display:block;font-size:13px;color:var(--ink-2);margin-top:2px}
+.moodq small{font-size:12.5px}
 .linkbtn{border:0;background:none;padding:0;color:var(--ink-2);text-decoration:underline;text-underline-offset:2px;font-size:inherit}
 /* urge timer */
 .timer{display:grid;place-items:center;position:relative;margin:4px auto 2px;width:190px;height:190px}
@@ -3037,11 +3041,12 @@ function focusCard(){
   const t=D.today(),m=(state.mood||{})[t],U=(state.urges||[]).filter(u=>u.date>=D.add(t,-6)),beat=U.filter(u=>u.outcome==='resisted').length,plans=todayPlans().slice(0,2);
   return `<section class="card focus"><div class="card-h"><h2>Stay on track</h2><span class="sub">${beat?`${beat} urge${beat>1?'s':''} beaten this week`:'One day at a time'}</span></div>
     ${m?`<div class="moodset"><span>Feeling ${MOODS[m.v-1]} ${MOOD_LBL[m.v-1].toLowerCase()} today</span><button type="button" class="btn sm ghost" data-act="mood-clear">Change</button></div>`
-      :`<div class="moodq"><span>How are you feeling today?</span><div class="moods" role="group" aria-label="Mood">${MOODS.map((e,i)=>`<button type="button" data-act="mood" data-v="${i+1}" aria-label="${MOOD_LBL[i]}" title="${MOOD_LBL[i]}">${e}</button>`).join('')}</div></div>`}
+      :`<div class="moodq"><span>How are you feeling today? <small class="muted">Tap one: it saves right away.</small></span><div class="moods" role="group" aria-label="Mood">${MOODS.map((e,i)=>`<button type="button" data-act="mood" data-v="${i+1}" aria-label="${MOOD_LBL[i]}" title="${MOOD_LBL[i]}">${e}</button>`).join('')}</div></div>`}
     ${plans.length?`<ul class="plans">${plans.map(p=>`<li><span>${esc(p.text)}</span></li>`).join('')}</ul>`:''}
     ${(()=>{const e=expTonight();return e?`<div class="exp-tonight ${e.on?'on':''}" style="margin-top:10px"><span class="eyebrow">Experiment · night ${e.day} of ${e.len}</span><b>${e.on?esc(e.x.text):'Normal night'}</b><small>${e.on?'Tonight is an "on" night.':'Tonight is an "off" night, for comparison.'}</small></div>`:''})()}
     ${liveHTML()}
-    <button type="button" class="btn urgebtn" data-act="urge">I have an urge</button></section>`;
+    <div class="urgebox"><div><b>Fighting an urge right now?</b><small>A 10-minute timer helps you ride it out.</small></div>
+      <button type="button" class="btn urgebtn" data-act="urge">I have an urge</button></div></section>`;
 }
 let urgeTimer=null;
 function addReason(r){r=String(r||'').trim();if(!r)return;const L=state.settings.reasons=state.settings.reasons||[];if(!L.includes(r))L.push(r);state.settings.reasons=L.slice(-8)}
