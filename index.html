@@ -454,6 +454,26 @@ input.amt-in{font-family:var(--display);font-size:30px;font-weight:700;padding:1
 .rk .x{border:0;background:none;color:var(--ink-3);font-size:20px;line-height:1;padding:0 4px}
 .sweep{background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box;border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
 .sweep h3{font-family:var(--display);font-size:20px;margin-top:4px}
+/* predictions */
+.oddrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.oddrow>div{background:var(--surface-2);border-radius:12px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.oddrow>div:nth-child(2){background:var(--debt-soft)}
+.oddrow b{font-family:var(--display);font-size:18px;font-weight:700;line-height:1.15}
+.oddrow small{font-size:11.5px;color:var(--ink-2)}
+.skel{height:120px;border-radius:12px;background:linear-gradient(90deg,var(--surface-2),var(--line),var(--surface-2));background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{from{background-position:200% 0}to{background-position:0 0}}
+.goalopts{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.goalopts li{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px}
+.solist{display:grid}
+.so{padding:10px 0;border-top:1px solid var(--line);display:grid;gap:6px}
+.so:first-child{border-top:0;padding-top:0}
+.so>b{font-size:15px}
+.so small{font-size:12.5px;color:var(--ink-2)}
+.sobar{display:grid;grid-template-columns:110px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13px;color:var(--ink-2)}
+.sobar i{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.sobar em{display:block;height:100%;border-radius:99px;background:var(--good)}
+.sobar strong{font-family:var(--mono);text-align:right;color:var(--ink)}
+.coach-text{font-size:15px;line-height:1.55;white-space:pre-wrap}
 /* habits */
 .habs{display:grid}
 .hab{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
@@ -653,7 +673,8 @@ function simulate(S,opt){
         }else{
           // future weeks: budget × what you usually spend in that season (exam weeks, holidays, summer), once learned
           const sf=S.settings.seasonal===false?null:seasonFactors(),s=seasonOf(D.add(a,3)),fac=sf&&sf.f[s]?sf.f[s]:1;
-          put(a,{t:'bill',env:true,label:f.name+(Math.abs(fac-1)>=0.05?` · ${SEASONS[s].toLowerCase()}`:''),amount:r2(occ[i].amount*fac),key:null,orig:a,fid:f.id});
+          const ef=opt.envFactor?opt.envFactor(a):1; // what-if replays: this week's spending above/below normal
+          put(a,{t:'bill',env:true,label:f.name+(Math.abs(fac-1)>=0.05?` · ${SEASONS[s].toLowerCase()}`:''),amount:r2(occ[i].amount*fac*ef),key:null,orig:a,fid:f.id});
         }
       }
       continue;
@@ -661,10 +682,13 @@ function simulate(S,opt){
     for(const oc of occurrences(f,start,end)){
       const key=f.id+'@'+oc.nat;if(done.has(key))continue;
       const od=oc.date<today;
-      const t=f.type==='reminder'?'reminder':f.uncertain?'maybe':f.type==='income'?'income':'bill';
-      put(od?today:oc.date,{t,label:f.name,amount:+oc.amount,key,orig:oc.date,overdue:od,fid:f.id,moved:oc.nat!==oc.date?oc.nat:null});
+      let t=f.type==='reminder'?'reminder':f.uncertain?'maybe':f.type==='income'?'income':'bill';
+      if(t==='maybe'&&opt.maybe&&opt.maybe(f,oc))t='income'; // what-if: this "maybe" money arrives
+      const amt=+oc.amount*(f.hours&&opt.payFactor&&!od?opt.payFactor(oc.date):1);
+      put(od?today:oc.date,{t,label:f.name,amount:r2(amt),key,orig:oc.date,overdue:od,fid:f.id,moved:oc.nat!==oc.date?oc.nat:null});
     }
   }
+  for(const s of opt.shocks||[])if(s.date>=today&&s.date<=end)put(s.date,{t:'bill',label:'Surprise cost',amount:s.amount,key:null,orig:s.date});
   const actual=S.debts.map(()=>[]),sched=S.debts.map(()=>[]);
   S.debts.forEach((r,di)=>{
     for(const e of log)if(e.type==='pay'&&e.debtId===r.id)actual[di].push([e.date,+e.amount]);
@@ -1020,6 +1044,146 @@ function seasonFactors(){
           if(cm>=5&&Math.abs(cs/cm-1)>=0.25)v.cats.push({s,c,ratio:cs/cm})}}}}
   seasonCache={k,v};return v;
 }
+/* ---------- prediction engine ---------- */
+/* 1) streak survival: past streaks (ended by a slip) plus the current one (still going) give a day-by-day
+   chance of slipping, pulled toward your overall slip rate where there's little data. */
+function streakRuns(L){
+  const ds=Object.keys(L).sort(),runs=[];let len=0,prev=null;
+  for(const d of ds){if(prev&&D.diff(prev,d)>1&&len>0){runs.push({len,event:false});len=0}
+    if(L[d]===1)len++;else{runs.push({len,event:true});len=0}prev=d}
+  return runs;
+}
+function streakOdds(h){
+  const L=(state.habitLog||{})[h.id]||{},t=D.today(),vals=Object.entries(L).filter(([d])=>d<=t);
+  const days=vals.length,slips=vals.filter(([,v])=>v===0).length;if(days<14||slips<2)return null;
+  const s=habitStats(h),c=s.streak,runs=streakRuns(Object.fromEntries(vals.filter(([d])=>d<t||L[t]===0)));
+  // the run that is still going is "censored": we know it survived c days, not when it will end
+  const all=runs.filter(r=>r.event).concat(c>0?[{len:c,event:false}]:[]);
+  const r=(slips+1)/(days+2),k=3,cacheH={};
+  const hz=day=>{if(cacheH[day]!=null)return cacheH[day];let n=0,d=0;for(const x of all){if(x.event){if(x.len>=day-1)n++;if(x.len===day-1)d++}else if(x.len>=day)n++}
+    return cacheH[day]=(d+k*r)/(n+k)};
+  const surv=(from,to)=>{let p=1;for(let d=from+1;d<=to;d++)p*=1-hz(d);return p};
+  const next=s.next,ev=all.filter(x=>x.event&&x.len>0).map(x=>x.len); // back-to-back slips aren't streaks
+  let danger=null;for(let d=c+1;d<=c+21;d++){const sm=(hz(d-1)+hz(d)+hz(d+1))/3;if(sm>=1.5*r&&(!danger||sm>danger.h))danger={day:d,h:sm}}
+  return {c,next,pNext:surv(c,next),p30:c<30?surv(c,30):null,danger,medianLen:ev.length>=3?Math.round(median(ev)):null,nRuns:ev.length,r};
+}
+/* 2) personal slip predictor: logistic regression on your own check-ins (ridge-regularized), checked on your most
+   recent 25% of days against simply using your average slip rate. Only used when it actually predicts better. */
+const FEAT=['base','Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','the days right after payday','being deep into a streak','a slip the day before','another habit slipping the day before','a big spending day before','exam weeks'];
+const sigm=z=>1/(1+Math.exp(-z));
+function slipFeatures(h,d,ctx,future){
+  const L=ctx.logs[h.id]||{},y=D.add(d,-1),w=dow(d),f=[1];for(let i=0;i<7;i++)f.push(w===i?1:0);
+  f.push(postIncome(ctx.inc,d)?1:0);
+  let st=0;if(future)st=future.streak+D.diff(ctx.t,d);else{let x=y;while(L[x]===1&&st<90){st++;x=D.add(x,-1)}}
+  f.push(Math.log1p(st)/2);
+  f.push(!future&&L[y]===0?1:0);
+  let o=0;if(!future)for(const hh of ctx.habits)if(hh.id!==h.id&&(ctx.logs[hh.id]||{})[y]===0)o=1;f.push(o);
+  f.push(!future&&ctx.ts&&y>=ctx.ts?Math.min(1.5,Math.log1p(ctx.spend.get(y)||0)/4):0);
+  f.push(seasonOf(d)==='exams'?1:0);
+  return f;
+}
+// ridge logistic regression fitted exactly with Newton's method (a few steps, tiny matrix)
+function trainLogit(X,Y,lambda){
+  const m=X[0].length,w=new Array(m).fill(0),p0=(Y.reduce((a,b)=>a+b,0)+1)/(Y.length+2);w[0]=Math.log(p0/(1-p0));
+  for(let it=0;it<15;it++){
+    const H=Array.from({length:m},()=>new Array(m).fill(0)),g=new Array(m).fill(0);
+    for(let i=0;i<X.length;i++){const x=X[i];let z=0;for(let j=0;j<m;j++)z+=x[j]*w[j];const p=sigm(z),s=Math.max(1e-6,p*(1-p)),e=p-Y[i];
+      for(let j=0;j<m;j++){if(!x[j])continue;g[j]+=e*x[j];for(let k=0;k<=j;k++)if(x[k])H[j][k]+=s*x[j]*x[k]}}
+    for(let j=0;j<m;j++){for(let k=j+1;k<m;k++)H[j][k]=H[k][j];if(j){g[j]+=lambda*w[j];H[j][j]+=lambda}else H[0][0]+=1e-6}
+    // solve H·d = g (Gaussian elimination with partial pivoting)
+    const A=H.map((r,i)=>r.concat(g[i]));
+    for(let c=0;c<m;c++){let p=c;for(let r=c+1;r<m;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];const v=A[c][c]||1e-9;
+      for(let r=0;r<m;r++){if(r===c)continue;const f=A[r][c]/v;if(f)for(let k=c;k<=m;k++)A[r][k]-=f*A[c][k]}}
+    let mx=0;for(let j=0;j<m;j++){const d=A[j][m]/(A[j][j]||1e-9);w[j]-=d;mx=Math.max(mx,Math.abs(d))}
+    if(mx<1e-5)break;
+  }
+  return w;
+}
+function slipModel(h,ctx){
+  const L=ctx.logs[h.id]||{},days=Object.keys(L).filter(d=>d<ctx.t&&d>=D.add(ctx.t,-240)).sort(),slips=days.filter(d=>L[d]===0).length;
+  if(days.length<30||slips<4)return null;
+  const X=days.map(d=>slipFeatures(h,d,ctx)),Y=days.map(d=>L[d]===0?1:0),cut=Math.floor(days.length*0.75);
+  const wt=trainLogit(X.slice(0,cut),Y.slice(0,cut),1.5),pb=(Y.slice(0,cut).reduce((a,b)=>a+b,0)+1)/(cut+2);
+  let bm=0,bb=0;for(let i=cut;i<X.length;i++){let z=0;for(let j=0;j<wt.length;j++)z+=X[i][j]*wt[j];bm+=(sigm(z)-Y[i])**2;bb+=(pb-Y[i])**2}
+  return {w:trainLogit(X,Y,1.5),skill:bb>0?1-bm/bb:0,base:(slips+1)/(days.length+2),n:days.length,slips};
+}
+let slipCache=null;
+function slipModels(){
+  const k=state.rev+'|'+(typeof expRev!=='undefined'?expRev:0)+'|'+D.today();if(slipCache&&slipCache.k===k)return slipCache;
+  const t=D.today(),spend=new Map();for(const e of EXP)spend.set(e.date,(spend.get(e.date)||0)+(+e.amount||0));
+  const ctx={t,habits:state.habits||[],logs:state.habitLog||{},inc:incomeDaySet(state,D.add(t,-260),D.add(t,120)),spend,ts:trackStart()},m={};
+  for(const h of ctx.habits){try{m[h.id]=slipModel(h,ctx)}catch(e){m[h.id]=null}}
+  return slipCache={k,ctx,m};
+}
+function slipRisk(h,d,futureStreak){
+  const {ctx,m}=slipModels(),M=m[h.id];if(!M||M.skill<=0.01)return null;
+  const f=slipFeatures(h,d,ctx,futureStreak!=null?{streak:futureStreak}:null);let z=0;f.forEach((x,j)=>z+=x*M.w[j]);
+  const why=[];f.forEach((x,j)=>{if(!j||!x)return;const c=M.w[j]*x;if(c>0.2)why.push([c,FEAT[j]])});why.sort((a,b)=>b[0]-a[0]);
+  return {p:sigm(z),base:M.base,skill:M.skill,why:why.slice(0,3).map(x=>x[1])};
+}
+function riskFactors(h){const {m}=slipModels(),M=m[h.id];if(!M||M.skill<=0.01)return null;
+  return M.w.map((w,j)=>[w,FEAT[j]]).filter(([w],j)=>j>0&&w>0.3).sort((a,b)=>b[0]-a[0]).slice(0,3).map(x=>x[1])}
+/* 5) forecast scorecard: every method forecasts each past week using only the weeks before it; the one with the
+   smallest average miss over the last 8 weeks is used for your forecasts. */
+function forecastScorecard(){
+  const wb=weeklyBudget(state),ts=trackStart();if(!ts)return {ready:false,weeks:0};
+  const t=D.today(),w0=weekStart(ts)===ts?ts:D.add(weekStart(ts),7),W=[];
+  for(let w=w0;D.add(w,7)<=t;w=D.add(w,7))W.push({w,tot:spentIn(w,D.add(w,6)),s:seasonOf(D.add(w,3))});
+  if(W.length<4)return {ready:false,weeks:W.length};
+  const sf=seasonFactors(),M={
+    ewma:{name:'Recent weeks, weighted',f:h=>ewma(h.map(x=>x.tot),3)},
+    median:{name:'Your typical week',f:h=>median(h.slice(-6).map(x=>x.tot))},
+    last:{name:'Same as last week',f:h=>h[h.length-1].tot},
+    seasonal:{name:'Recent weeks + season',f:(h,wk)=>{const fh=mean(h.slice(-6).map(x=>sf.f[x.s]||1))||1;return ewma(h.map(x=>x.tot),3)*(sf.f[wk.s]||1)/fh}}};
+  if(wb)M.budget={name:'Your budget',f:()=>wb};
+  const res={};for(const k in M)res[k]={name:M[k].name,err:[],preds:[]};
+  for(let i=3;i<W.length;i++){const hist=W.slice(0,i);for(const k in M){const p=Math.max(0,M[k].f(hist,W[i]));res[k].err.push(Math.abs(p-W[i].tot));res[k].preds.push({w:W[i].w,p,a:W[i].tot})}}
+  for(const k in res){const e=res[k].err.slice(-8);res[k].mae=mean(e);res[k].n=e.length}
+  const best=Object.keys(res).sort((a,b)=>res[a].mae-res[b].mae)[0];
+  return {ready:true,res,best,next:Math.max(0,M[best].f(W,{s:seasonOf(D.add(weekStart(t),3))})),last:res[best].preds[res[best].preds.length-1],weeks:W.length};
+}
+/* 6) drift: one-sided CUSUM against your earlier weeks, so slow creeping changes trip the alarm; for habits, the best
+   single change point in your slip rate, kept only if it clears a strict likelihood-ratio test */
+function cusumShift(xs){
+  const n=xs.length;if(n<8)return null;const bn=Math.max(4,Math.floor(n/2)),base=xs.slice(0,bn),mu=median(base),sd=Math.max(madev(base),mu*0.15,4);
+  let up=0,dn=0,upStart=null,dnStart=null;
+  for(let i=bn;i<n;i++){const z=(xs[i]-mu)/sd;const u=Math.max(0,up+z-0.5),d=Math.max(0,dn-z-0.5);if(up===0&&u>0)upStart=i;if(dn===0&&d>0)dnStart=i;up=u;dn=d}
+  return {mu,up:up>3.5?{from:upStart}:null,dn:dn>3.5?{from:dnStart}:null,recent:mean(xs.slice(-3))};
+}
+function spendingDrift(){
+  const ts=trackStart();if(!ts)return [];const t=D.today(),w0=weekStart(ts)===ts?ts:D.add(weekStart(ts),7),W=[];
+  for(let w=w0;D.add(w,7)<=t;w=D.add(w,7))W.push(w);const last=W.slice(-14);if(last.length<8)return [];
+  const out=[],chk=(name,xs,id)=>{const c=cusumShift(xs);if(!c)return;
+    if(c.up&&c.recent-c.mu>=6)out.push({id:'drift:'+id+':'+last[c.up.from],up:true,name,since:last[c.up.from],mu:c.mu,recent:c.recent});
+    else if(c.dn&&c.mu-c.recent>=6)out.push({id:'driftdn:'+id+':'+last[c.dn.from],up:false,name,since:last[c.dn.from],mu:c.mu,recent:c.recent})};
+  chk('Your spending',last.map(w=>spentIn(w,D.add(w,6))),'all');
+  for(const c of CATS){const xs=last.map(w=>sumAmt(EXP.filter(e=>e.cat===c.id&&e.date>=w&&e.date<D.add(w,7))));if(mean(xs)>=5)chk(c.name,xs,c.id)}
+  return out;
+}
+function habitShift(h){
+  const L=(state.habitLog||{})[h.id]||{},t=D.today(),ds=Object.keys(L).filter(d=>d<t&&d>=D.add(t,-120)).sort();if(ds.length<30)return null;
+  const y=ds.map(d=>L[d]===0?1:0),n=y.length,K=y.reduce((a,b)=>a+b,0);
+  const ll=(k,m)=>{if(!m)return 0;const p=k/m;return (k?k*Math.log(p):0)+(m-k?(m-k)*Math.log(1-p):0)};
+  const l0=ll(K,n);let best=null,pre=0;
+  for(let i=1;i<n;i++){pre+=y[i-1];if(i<10||n-i<10)continue;const lr=2*(ll(pre,i)+ll(K-pre,n-i)-l0);if(!best||lr>best.lr)best={lr,i,a:pre/i,b:(K-pre)/(n-i)}}
+  if(!best||best.lr<10||n-best.i>45)return null; // strict: scanning every split point inflates the test
+  return {since:ds[best.i],before:best.a,after:best.b,up:best.b>best.a};
+}
+/* 8) weight: straight-line trend over the last 8 weeks (least squares) with its uncertainty, projected to your goal */
+function weightProjection(){
+  const W=(state.weights||[]).slice().sort((a,b)=>a.date<b.date?-1:1),t=D.today(),recent=W.filter(w=>w.date>=D.add(t,-56));
+  if(recent.length<3||D.diff(recent[0].date,recent[recent.length-1].date)<14)return null;
+  const xs=recent.map(w=>D.diff(recent[0].date,w.date)),ys=recent.map(w=>w.kg),mx=mean(xs),my=mean(ys);
+  let sxx=0,sxy=0;for(let i=0;i<xs.length;i++){sxx+=(xs[i]-mx)**2;sxy+=(xs[i]-mx)*(ys[i]-my)}
+  const b=sxy/sxx,a=my-b*mx,res=ys.map((y,i)=>y-(a+b*xs[i])),se=Math.sqrt(res.reduce((s,r)=>s+r*r,0)/Math.max(1,xs.length-2)/sxx);
+  const nowX=D.diff(recent[0].date,t),cur=a+b*nowX,goal=+state.settings.weightGoal||null,out={perWeek:b*7,cur,se};
+  if(goal){const need=goal-cur;out.goal=goal;
+    if(Math.abs(need)<0.3)out.reached=true;
+    else if(b===0||Math.sign(b)!==Math.sign(need)||Math.abs(b*7)<0.05)out.away=true;
+    else{const days=need/b,slow=b-Math.sign(b)*1.64*se,fast=b+Math.sign(b)*1.64*se;
+      out.date=D.add(t,Math.round(days));out.early=D.add(t,Math.round(need/fast));out.late=Math.sign(slow)===Math.sign(b)&&Math.abs(slow)>1e-4?D.add(t,Math.round(need/slow)):null}}
+  return out;
+}
 function rank(tips){return tips.map(x=>Object.assign(x,{score:(x.impact||0)*(x.conf||0)*(x.urg||1)})).sort((a,b)=>b.score-a.score)}
 
 /* ---------- state + storage ---------- */
@@ -1230,6 +1394,10 @@ function getAnalysis(){
   try{
     const t=D.today(),dm=state.settings.dismissed||{},extra=[];
     for(const l of habitLinks(state).filter(l=>l.kind!=='pair').slice(0,2))if(!(dm[l.id]>=t))extra.push({id:l.id,tone:'idea',icon:'⇄',title:'Pattern found',body:l.text,impact:25,conf:0.85,urg:1});
+    for(const d of spendingDrift())if(!(dm[d.id]>=t))extra.push({id:d.id,tone:d.up?'warn':'good',icon:d.up?'↗':'↘',
+      title:d.up?`${d.name} has quietly crept up`:`${d.name} is quietly going down`,
+      body:d.up?`About ${$m0(d.recent)} a week lately versus your usual ${$m0(d.mu)}, starting the week of ${lbl(fmtMD,d.since)}. It's easy to miss week to week.`:`About ${$m0(d.recent)} a week lately versus your usual ${$m0(d.mu)}. That money goes to your plan. Nice work.`,
+      impact:Math.abs(d.recent-d.mu)*4.33*(d.up?1:0.4),conf:0.8,urg:d.up?1.2:0.8});
     const sf=seasonFactors(),cur=seasonOf(t);
     for(let i=1;i<=21;i++){const d=D.add(t,i),s=seasonOf(d);if(s!==cur){const f=sf.f[s];
       if(f&&f>=1.12&&!(dm['season:'+s+':'+d.slice(0,4)]>=t))extra.push({id:'season:'+s+':'+d.slice(0,4),tone:'warn',icon:'◷',title:`${SEASONS[s]} start ${lbl(fmtMD,d)}`,
@@ -1342,7 +1510,7 @@ function viewToday(sim){
   const wk=A.budget?`<section class="card week"><div class="row"><div><div class="eyebrow">Spending this week</div><div class="spent" style="font-size:30px">${$m(A.spent)}<small>of ${$m0(A.budget)}</small></div></div>
     <button type="button" class="btn sm" data-tab="spending">Details</button></div>${meter(A)}</section>`:'';
   const tip=A.tips[0]?`<div class="tips">${tipHTML(A.tips[0])}</div>`:'';
-  return `<div class="cols"><div class="stack">${hero}${alert}${sweepCard()}${riskCard()}${quick}${wk}${winsCard()}${tip}${journey}</div><div class="stack">${pend}${upc}</div></div>`;
+  return `<div class="cols"><div class="stack">${hero}${alert}${sweepCard()}${riskCard()}${quick}${wk}${winsCard()}${coachCard()}${tip}${journey}</div><div class="stack">${pend}${upc}</div></div>`;
 }
 
 function chartSVG(M,w){
@@ -1412,7 +1580,7 @@ function viewPlan(sim){
     <li><span><b>Anything above your ${$m0(S.settings.buffer)} cushion</b> at that low point is free money, and goes to the next debt in the order above.</span></li>
     <li><span><b>Once debt is gone,</b> the same money fills your ${$m0(S.settings.savingsGoal)} emergency fund, then goes to investing.</span></li></ol></section>`;
   const note=S.cash.set?'':`<div class="alert warn"><span class="ic">i</span><div><b>These dates assume $0 in your bank account.</b><p>Enter your real balance on the Today tab and every date here updates.</p></div></div>`;
-  return `${note}${kpis}<div class="cols"><div class="stack">${outlookCard()}${strategy}${order}</div><div class="stack">${chart}${learnedCard()}${how}</div></div>${table}`;
+  return `${note}${kpis}<div class="cols"><div class="stack">${goalCard()}${oddsCard()}${outlookCard()}${strategy}${order}</div><div class="stack">${chart}${learnedCard()}${how}</div></div>${table}`;
 }
 function viewDebts(sim){
   const S=state,M=sim.main,T=totals();
@@ -1499,7 +1667,7 @@ function viewSpending(){
   const rec=EXP.slice().reverse().slice(0,30);
   const recent=`<section class="card"><div class="card-h"><h2>Recent</h2><span class="sub">Tap one to edit</span></div><div>
     ${rec.map(e=>{const c=CAT[e.cat]||CAT.other;return `<button type="button" class="xrow" data-act="exp-edit" data-id="${esc(e.id)}"><i style="background:var(${c.col})"></i><div class="xn">${esc(e.note||c.name)}<small>${c.name} · ${lbl(fmtMD,e.date)}${e.via!=='bank'?' · '+esc(viaName(e.via)):''}</small></div><div class="xa">${$m(e.amount)}</div></button>`}).join('')||'<div class="empty">Your expenses will show up here.</div>'}</div></section>`;
-  return `<div class="cols"><div class="stack">${head}${tipsH}</div><div class="stack">${cats}${recent}</div></div>`;
+  return `<div class="cols"><div class="stack">${head}${tipsH}</div><div class="stack">${cats}${scorecardCard()}${recent}</div></div>`;
 }
 function expenseSheet(x,pre){
   const isNew=!x;x=x||Object.assign({date:D.today(),via:'bank'},pre||{});
@@ -1659,6 +1827,16 @@ function buildICS(opts){
     if(e.t!=='income'&&e.t!=='maybe')L.push('BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${ic(title)}`,`TRIGGER:${opts.alert==='same'?'PT9H':'-PT15H'}`,'END:VALARM');
     L.push('END:VEVENT');
   }
+  if(opts.risk){
+    // 10) heads-up on days the slip predictor expects to be hard (at most 2 per habit per week, next 8 weeks)
+    for(const h of state.habits||[]){const s=habitStats(h),picks=[];
+      for(let i=1;i<=56;i++){const d=D.add(t,i),m=slipRisk(h,d,s.streak);if(m&&m.p>=Math.max(0.25,1.8*m.base))picks.push({d,m})}
+      const perW={};for(const p of picks.sort((a,b)=>b.m.p-a.m.p)){const w=weekStart(p.d);perW[w]=(perW[w]||0)+1;if(perW[w]>2)continue;
+        const title=`Heads up: hard day for “${h.name}”`,d0=p.d.replace(/-/g,''),d1=D.add(p.d,1).replace(/-/g,'');
+        L.push('BEGIN:VEVENT',`UID:risk-${h.id}-${p.d}@payoff-path`,`DTSTAMP:${stamp}`,`DTSTART;VALUE=DATE:${d0}`,`DTEND;VALUE=DATE:${d1}`,`SUMMARY:${ic(title)}`,
+          `DESCRIPTION:${ic(`About ${Math.round(p.m.p*100)}% chance of a slip (usually ${Math.round(p.m.base*100)}%)${p.m.why.length?': '+p.m.why.join(', '):''}. Plan something for the evening.`)}`,'TRANSP:TRANSPARENT',
+          'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${ic(title)}`,'TRIGGER:PT9H','END:VALARM','END:VEVENT');n++}}
+  }
   if(opts.daily){
     // a repeating evening event in the phone's own time zone (floating time), with an alert right at that time
     const [hh,mm]=(opts.dailyTime||'21:30').split(':').map(x=>pad(+x||0)),d=t.replace(/-/g,''),endM=pad((+mm+5)%60),endH=pad(+hh+((+mm+5)>=60?1:0));
@@ -1678,7 +1856,8 @@ function calendarSheet(preset){
         <label class="check"><input type="checkbox" name="bills"${ck(!only)}><span>Rent, bills and payback dates</span></label>
         <label class="check"><input type="checkbox" name="cards"${ck(!only)}><span>Credit card minimums</span></label>
         <label class="check"><input type="checkbox" name="reminders"${ck(!only)}><span>Reminders (like scholarship applications)</span></label>
-        <label class="check"><input type="checkbox" name="income"><span>Paydays and money coming in</span></label></div>
+        <label class="check"><input type="checkbox" name="income"><span>Paydays and money coming in</span></label>
+        ${(()=>{const ok=(state.habits||[]).some(h=>{const M=slipModels().m[h.id];return M&&M.skill>0.01});return `<label class="check"><input type="checkbox" name="risk"${ok&&!only?' checked':''}${ok?'':' disabled'}><span>Heads-up on days you're likely to slip${ok?'':' (once the app has learned your patterns, after about a month of check-ins)'}</span></label>`})()}</div>
       <div class="row2"><label class="fld"><span>How far ahead</span><select name="months"><option value="3">3 months</option><option value="6" selected>6 months</option><option value="12">12 months</option></select></label>
       <label class="fld"><span>Alert</span><select name="alert"><option value="before">Day before, 9 AM</option><option value="same">Same day, 9 AM</option></select></label></div>
       ${IS_ARTIFACT?`<ol class="steps"><li>Tap <b>Download</b> and save the file.</li><li>Open the <b>Files</b> app, go to <b>Downloads</b> and tap the zip to open it.</li><li>Tap <b>payoff-path.ics</b>, then <b>Add All</b>. Picking a new calendar called "Payoff Path" makes it easy to replace later.</li></ol>`
@@ -1686,7 +1865,7 @@ function calendarSheet(preset){
       <p class="hint" style="margin:0">Dates change as your plan changes. Download a fresh file every month or two and delete the old calendar first.</p>`,
     submit:'Download',
     onSubmit:fd=>{
-      const opts={daily:fd.get('daily')==='on',dailyTime:fd.get('dailyTime')||'21:30',bills:fd.get('bills')==='on',cards:fd.get('cards')==='on',reminders:fd.get('reminders')==='on',income:fd.get('income')==='on',months:+fd.get('months')||6,alert:fd.get('alert')};
+      const opts={risk:fd.get('risk')==='on',daily:fd.get('daily')==='on',dailyTime:fd.get('dailyTime')||'21:30',bills:fd.get('bills')==='on',cards:fd.get('cards')==='on',reminders:fd.get('reminders')==='on',income:fd.get('income')==='on',months:+fd.get('months')||6,alert:fd.get('alert')};
       const {text,count}=buildICS(opts);if(!count){toast('Nothing to add with those choices');return false}
       (async()=>{
         if(IS_ARTIFACT){const zip=zipStore([{name:'payoff-path.ics',data:new TextEncoder().encode(text)}]);if(await saveFile('payoff-path-reminders.zip',zip))toast(`Saved ${count} reminders. Open it from Files.`)}
@@ -2068,7 +2247,7 @@ function viewHabits(){
   const allDone=H.length&&H.every(h=>stats[h.id].today!==undefined);
   const today=`<section class="card"><div class="card-h"><h2>${lbl(fmtDay,t)}</h2>${H.length&&!allDone?`<button type="button" class="btn sm accent" data-act="hab-all">All clean today</button>`:''}</div>
     ${H.length?`<div class="habs">${H.map(h=>{const s=stats[h.id];return `<div class="hab">${ring(s.prog,s.streak,s.today===1)}
-      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?'Slipped today. Tomorrow is day 1.':s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days`:'Tap ✓ to start your streak'}</small></div>
+      <div class="hn"><b>${esc(h.name)}</b><small>${s.today===0?'Slipped today. Tomorrow is day 1.':s.streak?`${s.streak} day${s.streak===1?'':'s'} clean · next goal ${s.next} days${(()=>{const o=streakOdds(h);return o?` · ${Math.round(o.pNext*100)}% odds`:''})()}`:'Tap ✓ to start your streak'}</small></div>
       <div class="hbtns" role="group" aria-label="${esc(h.name)} today"><button type="button" class="hb ok" data-act="hab" data-id="${esc(h.id)}" data-v="1" aria-pressed="${s.today===1}" aria-label="Clean today">✓</button><button type="button" class="hb no" data-act="hab" data-id="${esc(h.id)}" data-v="0" aria-pressed="${s.today===0}" aria-label="Slipped today">✗</button></div></div>`}).join('')}</div>`
       :`<div class="empty">Add the habits you want to quit or build.</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:8px"><button type="button" class="btn sm ghost" data-act="habits-edit" style="padding-left:0">${H.length?'Edit habits':'+ Add habits'}</button>
@@ -2093,14 +2272,14 @@ function viewHabits(){
   const shown=W.filter(w=>w.date>=from),last=W[W.length-1],u=wUnit();
   let chg='';if(last){const ref=W.filter(w=>w.date<=D.add(last.date,-28)).pop()||W[0];if(ref!==last){const d=wShow(last.kg)-wShow(ref.kg);chg=`<span class="pill ${Math.abs(d)<0.2?'':d<0?'good':'warn'}">${d<0?'▼':d>0?'▲':'•'} ${Math.abs(d).toFixed(1)} ${u} since ${lbl(fmtMD,ref.date)}</span>`}}
   const tr=W.length>1?weightTrend(W).pop().tr:null;
-  const weight=`<section class="card"><div class="card-h"><h2>Weight</h2><button type="button" class="btn sm" data-act="weight-add">+ Log weight</button></div>
-    ${last?`<div class="wnow"><div><div class="big2">${wFmt(last.kg)}<small>${u}</small></div><div class="wsub">${lbl(fmtMD,last.date)}${tr!=null?` · trend ${wFmt(tr)} ${u}`:''}</div></div>${chg}</div>
+  const weight=`<section class="card"><div class="card-h"><h2>Weight</h2><div style="display:flex;gap:6px"><button type="button" class="btn sm ghost" data-act="weight-goal">${S.settings.weightGoal?'Goal '+wFmt(S.settings.weightGoal):'Set goal'}</button><button type="button" class="btn sm" data-act="weight-add">+ Log weight</button></div></div>
+    ${last?`<div class="wnow"><div><div class="big2">${wFmt(last.kg)}<small>${u}</small></div><div class="wsub">${lbl(fmtMD,last.date)}${tr!=null?` · trend ${wFmt(tr)} ${u}`:''}</div></div>${chg}</div>${weightInsight()}
       ${W.length>1?`<div class="seg" role="group" aria-label="Range" style="margin:12px 0 4px">${[['1m','1M'],['3m','3M'],['1y','1Y'],['all','All']].map(([k,l])=>`<button type="button" data-act="wrange" data-v="${k}" aria-pressed="${wRange===k}">${l}</button>`).join('')}</div>
       <div class="chart" id="wchart"></div>`:'<p class="hint" style="margin:8px 0 0">Log a few more weigh-ins to see your trend line.</p>'}
       <div class="wlist">${W.slice(-4).reverse().map(w=>`<button type="button" class="xrow" data-act="weight-edit" data-id="${esc(w.id)}"><i style="background:var(--invest)"></i><div class="xn">${lbl(fmtDay,w.date)}</div><div class="xa">${wFmt(w.kg)} ${u}</div></button>`).join('')}</div>`
       :`<div class="empty">Log your weight now and then (once a week is plenty). The trend line smooths out daily ups and downs.</div>`}
     </section>`;
-  return `<div class="cols"><div class="stack">${riskCard()}${today}${cal}</div><div class="stack">${patternsCard()}${weight}</div></div>`;
+  return `<div class="cols"><div class="stack">${riskCard()}${today}${streakOddsCard()}${cal}</div><div class="stack">${patternsCard()}${weight}</div></div>`;
 }
 function drawWeight(){const el=$('#wchart');if(!el)return;const t=D.today(),from=wRange==='1m'?D.add(t,-31):wRange==='3m'?D.add(t,-92):wRange==='1y'?D.add(t,-366):'0000';
   const ws=state.weights.slice().sort((a,b)=>a.date<b.date?-1:1).filter(w=>w.date>=from);el.innerHTML=ws.length>1?weightChart(ws,Math.max(260,Math.round(el.clientWidth||520))):'<p class="hint">Not enough weigh-ins in this range.</p>'}
@@ -2139,6 +2318,7 @@ function outlook(S,M){
   // how your real weeks compare with the budget (spread measured robustly), or a sensible default until there's data
   const wk=budgetWeeks(S).weeks.filter(w=>w.tracked&&w.budget>0).map(w=>w.spent/w.budget);
   let mu=1,cv=0.25;if(wk.length>=3){mu=Math.max(0.5,Math.min(2,mean(wk)));cv=Math.max(0.12,Math.min(0.6,madev(wk)/(median(wk)||1)))}
+  const sc=forecastScorecard();if(sc.ready&&wb)mu=Math.max(0.5,Math.min(2,sc.next/wb)); // the most accurate forecast method sets the expected level
   const pShock=0.12,shock=Math.max(40,(wb||100)*0.6),r=rng(hash('outlook'+S.rev+':'+EXP.length)),runs=[],mins=[];
   for(let n=0;n<N;n++){const delta=new Float64Array(H+1);
     for(const e of env){const f=Math.max(0,mu+cv*gauss(r));let x=e.a*(f-1);if(r()<pShock)x+=shock*(0.5+r());delta[e.i]+=x}
@@ -2209,19 +2389,187 @@ function sweepCard(){
 /* ---------- 2) heads-up card ---------- */
 function riskCard(){
   const t=D.today(),dm=state.settings.dismissed||{};
-  const R=habitRisk(state).filter(x=>!dm['risk:'+x.habit.id+':'+t]).slice(0,2);
+  // the personal predictor when it has proven itself, the simpler weekday/payday rule otherwise
+  const rules=habitRisk(state);
+  const R=(state.habits||[]).map(h=>{if((state.habitLog[h.id]||{})[t]!==undefined||dm['risk:'+h.id+':'+t])return null;
+    const m=slipRisk(h,t);if(m)return m.p>=Math.max(0.15,1.5*m.base)?{habit:h,model:m}:null;return rules.find(x=>x.habit.id===h.id)||null})
+    .filter(Boolean).sort((a,b)=>(b.model?b.model.p/b.model.base:b.rel)-(a.model?a.model.p/a.model.base:a.rel)).slice(0,2);
   const A=getAnalysis();let spend='';
   if(A.share&&A.days>=21&&A.budget&&!dm['riskspend:'+t]){const pk=A.share.indexOf(Math.max(...A.share));
     if(pk===dow(t)&&A.share[pk]>=0.22)spend=`<div class="rk"><span class="ti">$</span><div><b>${WD[pk]}s are your biggest spending day</b><p>About ${Math.round(A.share[pk]*100)}% of your spending happens today. ${$m0(Math.max(0,A.budget-A.spent))} left in this week's budget.</p></div><button type="button" class="x" data-act="risk-ok" data-id="spend" aria-label="Dismiss">×</button></div>`}
   if(!R.length&&!spend)return '';
   return `<section class="card risk"><div class="card-h"><h2>Heads up today</h2></div>
-    ${R.map(x=>`<div class="rk"><span class="ti">!</span><div><b>Hard day for “${esc(x.habit.name)}”</b><p>More of your slips happen on ${x.reasons.join(' and ')}. Plan something for tonight and check in when you've made it.</p></div><button type="button" class="x" data-act="risk-ok" data-id="${esc(x.habit.id)}" aria-label="Dismiss">×</button></div>`).join('')}${spend}</section>`;
+    ${R.map(x=>`<div class="rk"><span class="ti">!</span><div><b>Hard day for “${esc(x.habit.name)}”</b><p>${x.model?`About a ${Math.round(x.model.p*100)}% chance of a slip today, versus ${Math.round(x.model.base*100)}% on a usual day${x.model.why.length?`. Higher because of ${x.model.why.join(', ')}`:''}.`:`More of your slips happen on ${x.reasons.join(' and ')}.`} Plan something for tonight and check in when you've made it.</p></div><button type="button" class="x" data-act="risk-ok" data-id="${esc(x.habit.id)}" aria-label="Dismiss">×</button></div>`).join('')}${spend}</section>`;
 }
 function patternsCard(){
   const L=habitLinks(state).slice(0,4);
+  for(const h of state.habits||[]){const s=habitShift(h);if(!s)continue;const f=x=>x<0.05?'almost never':`about ${Math.max(1,Math.round(x*10))} in 10 days`;
+    L.unshift({text:s.up?`Slips on “${esc(h.name)}” went from ${f(s.before)} to ${f(s.after)} starting ${lbl(fmtMD,s.since)}. Something changed around then.`:`Slips on “${esc(h.name)}” dropped from ${f(s.before)} to ${f(s.after)} since ${lbl(fmtMD,s.since)}. Whatever you changed is working.`})}
   return `<section class="card"><div class="card-h"><h2>Patterns</h2><span class="sub">Habits × money</span></div>
     ${L.length?`<div class="tips">${L.map(l=>`<div class="tip idea"><span class="ti" aria-hidden="true">⇄</span><div style="min-width:0"><p style="margin:0;color:var(--ink)">${l.text}</p></div><span></span></div>`).join('')}</div>`
     :`<div class="empty">Keep checking in and logging spending. After a few weeks (and at least 3 slips on a habit), the app looks for real links: spending on slip days, slips after payday, habits that slip together. Only patterns that pass a statistics test show up.</div>`}</section>`;
+}
+/* ---------- background jobs: heavy replays run in small slices so the app never freezes ---------- */
+const bgJobs={};
+function bgRun(key,gen,done){
+  if(bgJobs[key])return;bgJobs[key]=true;const it=gen();
+  const tick=()=>{const t0=performance.now();try{while(performance.now()-t0<24){const r=it.next();if(r.done){delete bgJobs[key];done(r.value);return}}}catch(e){console.error(e);delete bgJobs[key];return}setTimeout(tick,0)};
+  setTimeout(tick,40);
+}
+/* 3) debt-free odds: the full plan replayed 150 times */
+let oddsRes={k:null,v:null};
+function debtOdds(){
+  const k=getSim().key;if(oddsRes.k===k)return oddsRes.v;
+  bgRun('odds:'+k,function*(){
+    const S=state,N=150,t=D.today(),wb=weeklyBudget(S),sc=forecastScorecard();
+    const wk=budgetWeeks(S).weeks.filter(w=>w.tracked&&w.budget>0).map(w=>w.spent/w.budget);
+    let mu=1,cv=0.25;if(wk.length>=3){mu=Math.max(0.5,Math.min(2,sc.ready&&wb?sc.next/wb:mean(wk)));cv=Math.max(0.12,Math.min(0.6,madev(wk)/(median(wk)||1)))}
+    const shockAmt=Math.max(40,(wb||100)*0.6),ends=[],byMonth={};
+    for(let n=0;n<N;n++){
+      const r=rng(hash('odds'+n+':'+S.rev+':'+EXP.length)),level=mu+cv*0.4*gauss(r),noise=new Map(),pf=new Map(),mb=new Map();
+      const envFactor=d=>{if(!noise.has(d))noise.set(d,Math.max(0.3,level+cv*0.9*gauss(r)));return noise.get(d)};
+      const payFactor=d=>{if(!pf.has(d))pf.set(d,Math.max(0.6,Math.min(1.3,1+0.08*gauss(r))));return pf.get(d)};
+      const maybe=(f,oc)=>{const kk=f.id+oc.date;if(!mb.has(kk))mb.set(kk,r()<0.6);return mb.get(kk)};
+      const shocks=[];for(let d=t;d<=D.add(t,540);d=D.add(d,7))if(r()<0.12)shocks.push({date:D.add(d,Math.floor(r()*7)),amount:r2(shockAmt*(0.5+r()))});
+      const M=simulate(S,{envFactor,payFactor,maybe,shocks});ends.push(M.debtFree||null);
+      for(const d of M.daily)if(d.date===t||d.date.endsWith('-01'))(byMonth[d.date]=byMonth[d.date]||[]).push(d.debt);
+      yield;
+    }
+    const sorted=ends.map(d=>d||'9999-12-31').sort(),q=p=>{const v=sorted[Math.min(N-1,Math.floor(p*N))];return v==='9999-12-31'?null:v};
+    const fan=Object.keys(byMonth).sort().slice(0,19).map(d=>{const a=byMonth[d].slice().sort((x,y)=>x-y);return {date:d,p10:a[Math.floor(a.length*0.1)],p50:a[Math.floor(a.length*0.5)],p90:a[Math.floor(a.length*0.9)]}});
+    const goal=S.settings.goalDate||null;
+    return {p10:q(0.1),p50:q(0.5),p90:q(0.9),fan,N,goal,pGoal:goal?ends.filter(d=>d&&d<=goal).length/N:null};
+  },v=>{oddsRes={k,v};const el=document.getElementById('odds-card');if(el&&tab==='plan'){el.outerHTML=oddsCard();drawFan();const g=document.getElementById('goal-card');if(g)g.outerHTML=goalCard()}});
+  return null;
+}
+function oddsCard(){
+  if(totals().left<=0.5)return '';
+  if(!state.cash.set)return `<section class="card" id="odds-card"><div class="card-h"><h2>Debt-free odds</h2></div><p class="small muted" style="margin:0">Enter your bank balance on the Today tab to see your odds.</p></section>`;
+  const v=debtOdds();
+  if(!v)return `<section class="card" id="odds-card"><div class="card-h"><h2>Debt-free odds</h2><span class="sub">Replaying your plan 150 times…</span></div><div class="skel"></div></section>`;
+  const cell=(l,d,s)=>`<div><span class="eyebrow">${l}</span><b>${d?lbl(fmtMY,d):'18 mo+'}</b><small>${s}</small></div>`;
+  return `<section class="card" id="odds-card"><div class="card-h"><h2>Debt-free odds</h2><span class="sub">${v.N} replays of your plan</span></div>
+    <div class="oddrow">${cell('Best case',v.p10,'1 in 10 replays')}${cell('Most likely',v.p50,'half are done by then')}${cell('Almost sure',v.p90,'9 in 10 replays')}</div>
+    ${v.goal?`<p class="small" style="margin:10px 0 0"><b>${Math.round(v.pGoal*100)}% chance</b> of being debt-free by your goal, ${lbl(fmtMDY,v.goal)}.</p>`:''}
+    <div class="chart" id="fanchart"></div>
+    <p class="hint" style="margin:6px 0 0">Each replay changes your weekly spending, work hours, surprise costs, and whether "maybe" money like the semester scholarship comes in.</p></section>`;
+}
+function drawFan(){
+  const el=$('#fanchart');if(!el||!oddsRes.v)return;const F=oddsRes.v.fan;if(F.length<2){el.innerHTML='';return}
+  const w=Math.max(280,Math.round(el.clientWidth||600)),h=Math.round(Math.min(220,Math.max(160,w*0.38))),pl=48,pr=12,pt=10,pb=24;
+  const hi=Math.max(100,...F.map(f=>f.p90)),pow=Math.pow(10,Math.floor(Math.log10(hi)));let step=pow;for(const m of[0.5,1,2,2.5,5,10]){if(hi/(pow*m)<=4){step=pow*m;break}}
+  const top=Math.ceil(hi/step)*step,X=i=>pl+(w-pl-pr)*i/(F.length-1),Y=v=>pt+(h-pt-pb)*(1-v/top);
+  let g='';for(let v=0;v<=top+0.1;v+=step)g+=`<line x1="${pl}" x2="${w-pr}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)"/><text x="${pl-6}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="var(--mono)">${v>=1000?'$'+v/1000+'k':'$'+v}</text>`;
+  const every=Math.ceil(F.length/Math.max(2,Math.floor((w-pl-pr)/60)));F.forEach((f,i)=>{if(i%every===0)g+=`<text x="${X(i).toFixed(1)}" y="${h-6}" text-anchor="${i?'middle':'start'}" font-size="11" fill="var(--ink-3)">${i?fmtMon.format(D.parse(f.date)):'Now'}</text>`});
+  const up=F.map((f,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(f.p90).toFixed(1)).join(' '),dn=F.map((f,i)=>'L'+X(F.length-1-i).toFixed(1)+' '+Y(F[F.length-1-i].p10).toFixed(1)).join(' ');
+  const mid=F.map((f,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(f.p50).toFixed(1)).join(' ');
+  el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Range of how your total debt could go down">${g}<path d="${up} ${dn} Z" fill="var(--debt)" fill-opacity=".16"/><path d="${mid}" fill="none" stroke="var(--debt)" stroke-width="2.5" stroke-linejoin="round"/></svg>`;
+}
+/* 4) reverse planning: what it takes to be debt-free by a date you choose */
+let goalRes={k:null,v:null};
+function* goalJob(g){
+  const S=state,M=getSim().main,out={g,base:M.debtFree},ok=m=>m.debtFree&&m.debtFree<=g;
+  if(M.debtFree&&M.debtFree<=g){out.onTrack=D.diff(M.debtFree,g);return out}
+  const wb=weeklyBudget(S);
+  if(wb){let lo=10,hi=wb;const c={};const m0=simWithWeekly(S,lo,c);yield;
+    if(ok(m0)){for(let i=0;i<7;i++){const mid=(lo+hi)/2,m=simWithWeekly(S,mid,c);yield;if(ok(m))lo=mid;else hi=mid}out.cap=Math.max(10,Math.floor(lo/5)*5);out.wb=wb}else out.capNo=true}
+  const rate=hourlyRate(S),pay=S.flows.find(f=>+f.hours>0&&f.rule&&f.rule.anchor);
+  if(rate&&pay){const withH=h=>{const T=JSON.parse(JSON.stringify(S));T.flows.push({id:'__h',name:'Extra hours',type:'income',amount:r2(h*rate),rule:{freq:pay.rule.freq,anchor:pay.rule.anchor}});return simulate(T)};
+    let lo=0,hi=40;const mh=withH(hi);yield;if(ok(mh)){for(let i=0;i<7;i++){const mid=(lo+hi)/2,m=withH(mid);yield;if(ok(m))hi=mid;else lo=mid}out.hours=Math.max(1,Math.ceil(hi));out.rate=rate}else out.hoursNo=true}
+  const withL=L=>{const T=JSON.parse(JSON.stringify(S));T.cash.amount=r2((+T.cash.amount||0)+L);return simulate(T)};
+  let lo=0,hi=Math.max(500,totals().left*1.2);const ml=withL(hi);yield;
+  if(ok(ml)){for(let i=0;i<9;i++){const mid=(lo+hi)/2,m=withL(mid);yield;if(ok(m))hi=mid;else lo=mid}out.lump=Math.ceil(hi/10)*10}
+  return out;
+}
+function goalCard(){
+  if(totals().left<=0.5)return '';const g=state.settings.goalDate;
+  if(!g)return `<section class="card" id="goal-card"><div class="card-h"><h2>Pick a debt-free date</h2></div><p class="small muted" style="margin:0 0 10px">Choose when you want to be debt-free. The app works out exactly what it takes to get there.</p><button type="button" class="btn sm primary" data-act="goal-set">Choose a date</button></section>`;
+  const k=getSim().key+'|'+g;
+  if(goalRes.k!==k)bgRun('goal:'+k,()=>goalJob(g),v=>{goalRes={k,v};const el=document.getElementById('goal-card');if(el&&tab==='plan')el.outerHTML=goalCard()});
+  const v=goalRes.k===k?goalRes.v:null,odds=oddsRes.v&&oddsRes.v.goal===g?oddsRes.v.pGoal:null;
+  const head=`<div class="card-h"><h2>Goal: debt-free by ${lbl(fmtMDY,g)}</h2><button type="button" class="btn sm ghost" data-act="goal-set">Change</button></div>`;
+  if(!v)return `<section class="card" id="goal-card">${head}<p class="small muted" style="margin:0">Working out what it takes…</p></section>`;
+  if(v.onTrack!=null)return `<section class="card" id="goal-card">${head}<div class="verdict good"><b>You're on track</b><p>The plan gets you there about ${v.onTrack} day${v.onTrack===1?'':'s'} early${odds!=null?`, and ${Math.round(odds*100)}% of replays make it`:''}. Keep logging so it stays that way.</p></div></section>`;
+  const opts=[];
+  if(v.cap&&v.cap>=v.wb*0.6)opts.push(`<li><span><b>Spend at most ${$m0(v.cap)} a week</b> (your budget is ${$m0(v.wb)})</span><button type="button" class="btn sm" data-act="tip-budget" data-v="${v.cap}">Use it</button></li>`);
+  else if(v.cap||v.capNo)opts.push(`<li class="muted"><span>Cutting spending alone would mean ${v.cap?`under ${$m0(v.cap)} a week`:'almost nothing a week'}, which isn't realistic. Mix it with one of the options below.</span></li>`);
+  if(v.hours)opts.push(`<li><b>Work about ${v.hours} more hours</b> every 2 weeks (about ${$m0(v.hours*v.rate)} extra per paycheque)</li>`);
+  if(v.lump)opts.push(`<li><b>Put an extra ${$m0(v.lump)}</b> toward it, like a tax refund or gift</li>`);
+  return `<section class="card" id="goal-card">${head}<p class="small" style="margin:0 0 8px">Right now the plan says ${v.base?lbl(fmtMDY,v.base):'more than 18 months'}${odds!=null?` (${Math.round(odds*100)}% chance of making your date)`:''}. Any <b>one</b> of these gets you there:</p>
+    ${opts.length?`<ul class="goalopts">${opts.join('')}</ul>`:`<p class="small muted">That date is too close for any single change. Try a later date.</p>`}</section>`;
+}
+function goalSheet(){
+  const t=D.today(),cur=state.settings.goalDate||D.addMonths(t,4);
+  openSheet({title:'Debt-free goal',lead:'Pick the date you want to be debt-free by.',body:`<label class="fld"><span>Goal date</span><input id="goal-d" name="d" type="date" min="${D.add(t,14)}" value="${cur}"></label>`,submit:'Save goal',
+    extra:state.settings.goalDate?[{label:'Remove goal',cls:'danger',onClick:()=>{delete state.settings.goalDate;commit('Goal removed')}}]:[],
+    onSubmit:fd=>{const d=fd.get('d');if(!d||d<=t){toast('Pick a date in the future');return false}state.settings.goalDate=d;commit('Goal saved. Working it out…')}});
+}
+/* 5) scorecard card */
+function scorecardCard(){
+  const sc=forecastScorecard();
+  if(!sc.ready)return `<section class="card"><div class="card-h"><h2>Forecast accuracy</h2></div><p class="small muted" style="margin:0">After 4 full weeks of logging, the app tests several ways of predicting your week against what really happened and keeps the most accurate one. (${sc.weeks} of 4 weeks so far)</p></section>`;
+  const R=sc.res,b=R[sc.best],ks=Object.keys(R).sort((x,y)=>R[x].mae-R[y].mae);
+  return `<section class="card"><div class="card-h"><h2>Forecast accuracy</h2><span class="sub">Tested on your last ${b.n} weeks</span></div>
+    <p class="small" style="margin:0 0 8px">Next week: about <b>${$m0(sc.next)}</b>.${sc.last?` Last week it predicted ${$m0(sc.last.p)} and you spent ${$m0(sc.last.a)}.`:''}</p>
+    ${ks.map(k=>`<div class="sumline"><span>${R[k].name}${k===sc.best?' <span class="pill good">in use</span>':''}</span><b>±${$m0(R[k].mae)}</b></div>`).join('')}
+    <p class="hint" style="margin:8px 0 0">Average miss per week. It re-checks every week and switches if another method gets more accurate.</p></section>`;
+}
+/* 1+2) streak odds card */
+function streakOddsCard(){
+  const H=state.habits||[];if(!H.length)return '';
+  const rows=H.map(h=>{const o=streakOdds(h),rf=riskFactors(h),M=slipModels().m[h.id];
+    if(!o)return `<div class="so"><b>${esc(h.name)}</b><small>Needs about 2 weeks of check-ins (and at least 2 slips) to estimate your odds.</small></div>`;
+    const bar=(l,p)=>`<div class="sobar"><span>${l}</span><i><em style="width:${Math.round(p*100)}%"></em></i><strong>${Math.round(p*100)}%</strong></div>`;
+    return `<div class="so"><b>${esc(h.name)}</b>${bar(`Reach ${o.next} days`,o.pNext)}${o.p30!=null&&o.next<30?bar('Reach 30 days',o.p30):''}
+      <small>${o.medianLen!=null?`Your streaks usually end around day ${o.medianLen+1}. `:''}${o.danger?`Watch day ${o.danger.day}${o.danger.day===o.c+1?' (tomorrow)':''}: that's where your streaks tend to break. `:''}${rf&&rf.length?`What raises your risk: ${rf.join(', ')}. `:''}${M&&M.skill>0.01?`The predictor beats plain averages by ${Math.round(M.skill*100)}% on your recent days.`:M?'The predictor is still learning (not yet better than averages).':''}</small></div>`}).join('');
+  return `<section class="card"><div class="card-h"><h2>Streak odds</h2><span class="sub">From your own history</span></div><div class="solist">${rows}</div></section>`;
+}
+/* 9) weekly coach (claude.ai version) */
+function coachCard(){
+  if(!IS_ARTIFACT)return '';const c=state.coach,fresh=c&&c.week===weekStart(D.today());
+  return `<section class="card coach" id="coach-card"><div class="card-h"><h2>Weekly coach</h2><span class="sub">${c?'Written '+lbl(fmtMD,c.at):'Written by Claude'}</span></div>
+    <div class="coach-text" id="coach-text">${c?esc(c.text):'<span class="muted">A short, personal briefing on your week: money, streaks, what to watch, and one thing to focus on.</span>'}</div>
+    <div style="margin-top:10px"><button type="button" class="btn sm${fresh?'':' accent'}" data-act="coach">${fresh?'Write a new one':c?'Get this week\'s briefing':'Get my briefing'}</button></div></section>`;
+}
+function coachData(){
+  const S=state,t=D.today(),M=getSim().main,A=getAnalysis(),T=totals(),B=budgetWeeks(S),O=S.cash.set?getOutlook():null,odds=oddsRes.v;
+  return {date:t,bank:S.cash.set?r2(cashNow(S)):null,debt_left:T.left,debt_paid_so_far:T.paid,debt_free_plan:M.debtFree,debt_free_odds:odds?{best:odds.p10,likely:odds.p50,almost_sure:odds.p90,goal:odds.goal,chance_of_goal:odds.pGoal}:null,
+    goal_date:S.settings.goalDate||null,chance_bank_stays_positive_60d:O?Math.round(O.pSafe*100)+'%':null,
+    this_week:{spent:A.spent,budget:A.budget,forecast:A.forecast},last_week:B.weeks.length?{spent:B.weeks[B.weeks.length-1].spent,budget:B.weeks[B.weeks.length-1].budget}:null,under_budget_streak_weeks:B.streak,
+    top_categories_30d:A.cats.slice(0,4).map(c=>({name:c.c.name,spent:r2(c.cur)})),interest_avoided:interestAvoided(S).total,
+    habits:(S.habits||[]).map(h=>{const s=habitStats(h),o=streakOdds(h),rk=slipRisk(h,t);return {name:h.name,streak_days:s.streak,best:s.best,clean_last_30:s.l30?Math.round(s.c30/s.l30*100)+'%':null,chance_next_goal:o?Math.round(o.pNext*100)+'% to reach '+o.next+' days':null,risk_today:rk?Math.round(rk.p*100)+'%':null}}),
+    bills_next_7_days:M.events.filter(e=>!e.overdue&&e.date<=D.add(t,7)&&(e.t==='bill'||e.t==='sched'||e.t==='min')&&!e.env).map(e=>({what:e.label,amount:Math.abs(e.amount),date:e.date})),
+    smart_tips:A.tips.slice(0,3).map(x=>x.title.replace(/<[^>]+>/g,''))};
+}
+async function runCoach(btn){
+  const sample=IS_ARTIFACT?await window.claude.use('sample'):null;if(!sample){toast("Claude isn't available here");return}
+  const el=$('#coach-text');btn.disabled=true;el.innerHTML='<span class="muted">Thinking about your week…</span>';
+  const prompt=`You are a warm, direct coach for a university student in Montreal who is paying off debt, sticking to a weekly budget and quitting some habits. Using ONLY the data below, write this week's briefing.
+Rules: 4 to 6 short sentences in plain, friendly English. Use specific numbers from the data. Mention one win, one thing to watch (a tight day, a risky habit day, a bill), and where the debt plan stands. Never shame or lecture about habits; be encouraging and practical. No investment advice. No markdown, no bullet points.
+End with a final line that starts with "This week's focus:" followed by one concrete action.
+
+DATA:
+${JSON.stringify(coachData())}`;
+  try{const {text}=await sample(prompt,{cache:false,onText:({text})=>{el.textContent=text}});state.coach={week:weekStart(D.today()),text:text.trim(),at:D.today()};commit()}
+  catch(e){el.textContent=(e&&e.text)||'';toast(e&&e.code==='not_granted'?'Claude was not allowed for this page':e&&e.code==='rate_limited'?'Too many requests. Try again later.':"Couldn't write the briefing right now")}
+  btn.disabled=false;
+}
+function weightGoalSheet(){
+  const u=wUnit(),g=state.settings.weightGoal?wFmt(state.settings.weightGoal):'';
+  openSheet({title:'Weight goal',lead:'The app projects when you will reach it from your trend.',body:`<label class="fld"><span>Goal (${u})</span><input id="wg-v" name="v" class="amt-in" type="number" step="0.1" min="0" inputmode="decimal" value="${g}"></label>`,submit:'Save goal',
+    extra:state.settings.weightGoal?[{label:'Remove goal',cls:'danger',onClick:()=>{delete state.settings.weightGoal;commit('Goal removed')}}]:[],
+    onSubmit:fd=>{const v=num(fd.get('v'));if(!(v>0)){toast('Enter a goal weight');return false}state.settings.weightGoal=Math.round((u==='lb'?v/KGLB:v)*1000)/1000;commit('Goal saved')}});
+}
+function weightInsight(){
+  const P=weightProjection(),u=wUnit();if(!P)return '';
+  const pw=wShow(Math.abs(P.perWeek)*1)*(u==='lb'?1:1),dir=P.perWeek<-0.02?'losing':P.perWeek>0.02?'gaining':'holding steady';
+  let goal='';if(P.goal){const gs=wFmt(P.goal)+' '+u;goal=P.reached?`You're at your goal of ${gs}. Nice.`:P.away?`At this pace you're moving away from your goal (${gs}).`:`Goal ${gs}: around <b>${lbl(fmtMDY,P.date)}</b> (likely ${lbl(fmtMD,P.early)} to ${P.late?lbl(fmtMD,P.late):'later'}).`}
+  // eating out vs weight change between weigh-ins (rank correlation)
+  const W=state.weights.slice().sort((a,b)=>a.date<b.date?-1:1),pairs=[];
+  for(let i=1;i<W.length;i++){const gap=D.diff(W[i-1].date,W[i].date);if(gap<4||gap>14)continue;pairs.push([sumAmt(EXP.filter(e=>e.cat==='eating'&&e.date>W[i-1].date&&e.date<=W[i].date))/gap*7,(W[i].kg-W[i-1].kg)/gap*7])}
+  let rel='';if(pairs.length>=6){const rk=a=>{const s=a.map((v,i)=>[v,i]).sort((x,y)=>x[0]-y[0]),r=[];s.forEach(([,i],j)=>r[i]=j);return r};const ra=rk(pairs.map(p=>p[0])),rb=rk(pairs.map(p=>p[1])),n=pairs.length;
+    const rho=1-6*ra.reduce((s,v,i)=>s+(v-rb[i])**2,0)/(n*(n*n-1));if(rho>=0.5)rel=' Weeks you eat out more, your weight tends to go up.';else if(rho<=-0.5)rel=' Interesting: weeks you eat out more, your weight tends to go down.'}
+  return `<p class="small" style="margin:10px 0 0">Trend: ${dir}${dir!=='holding steady'?` about ${(Math.round(wShow(Math.abs(P.perWeek))*10)/10).toFixed(1)} ${u} a week`:''}. ${goal}${rel}</p>`;
 }
 function emptyView(){
   if(!IS_ARTIFACT&&!ghConf())return `<section class="card" style="max-width:560px"><h2 style="font-size:22px">Welcome to Payoff Path</h2><p class="muted">Already using it on another device? Turn on sync and your plan, debts, spending and habits load here.</p>
@@ -2239,7 +2587,7 @@ function render(){
   if(!state){V.innerHTML=mode==='loading'?'<div class="loading">Loading your plan…</div>':emptyView();return}
   const sim=getSim();
   V.innerHTML=tab==='habits'?viewHabits():tab==='spending'?viewSpending():tab==='plan'?viewPlan(sim):tab==='debts'?viewDebts(sim):tab==='setup'?viewSetup():viewToday(sim);
-  if(tab==='plan'){drawChart();drawOutlook()}
+  if(tab==='plan'){drawChart();drawOutlook();drawFan()}
   if(tab==='today')runTicker();
   if(tab==='habits')drawWeight();
   setTimeout(checkMilestones,0);
@@ -2572,6 +2920,10 @@ document.addEventListener('click',e=>{
   if(act==='cash')return cashSheet();
   if(act==='pay')return paySheet(id);
   if(act==='oneoff')return oneOffSheet();
+  if(act==='goal-set')return goalSheet();
+  if(act==='tip-budget')return runTip({act:'set-budget',v:+a.dataset.v});
+  if(act==='coach')return runCoach(a);
+  if(act==='weight-goal')return weightGoalSheet();
   if(act==='sweep-send'){const o=sweepOffer(state);if(!o)return;state.sweeps[o.w.a]='sent';let lid;
     if(o.target)lid=addLog({type:'pay',debtId:o.target.id,amount:o.amt,cashDelta:-o.amt,label:'Leftover budget · '+o.target.name});
     else lid=addLog({type:'save',amount:o.amt,cashDelta:-o.amt,savingsDelta:o.amt,label:'Leftover budget → savings'});
@@ -2613,7 +2965,7 @@ document.addEventListener('change',e=>{
   if(k==='savings')state.savings.amount=v;else if(k==='invest')state.invest.amount=v;else state.settings[k]=v;
   commit('Saved');
 });
-let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(tab==='plan'){drawChart();drawOutlook()}if(tab==='habits')drawWeight()},150)});
+let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(tab==='plan'){drawChart();drawOutlook();drawFan()}if(tab==='habits')drawWeight()},150)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state){simCache=null;render()}});
 {const h=(location.hash||'').slice(1);if(TITLES[h])tab=h}
 render();
